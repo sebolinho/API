@@ -90,7 +90,7 @@ Screenshots captured confirm visual appearance is identical to original.
 ## Technical Details
 
 ### CSS Consolidation Process
-1. Extracted inline CSS from all three HTML files (lines 17-1986)
+1. Extracted inline CSS from all three HTML files (approximately 1,970 lines of CSS per file)
 2. Verified all three files contained identical CSS (with only whitespace differences)
 3. Combined extracted CSS with existing styles.css
 4. Created main.css containing all styles
@@ -109,7 +109,6 @@ The refactored code maintains all original CSS including:
 ### Future Improvements
 1. **JavaScript Extraction**: No inline JavaScript was found, but if added in the future, create a separate `main.js` file
 2. **CSS Minification**: Consider minifying main.css for production to further reduce file size
-3. **PHP Conversion**: If server-side functionality is needed, files can be renamed to .php while keeping the same structure
 
 ### Maintenance
 - All CSS changes should now be made in `main.css`
