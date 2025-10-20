@@ -1,7 +1,5 @@
-      </div>
-<div class="w-full max-w-[70rem] mx-auto transition-all duration-200 p-4 bg-transparent border border-transparent rounded-xl justify-between items-center"
-      <div class="flex flex-col items-center justify-center w-full" style="
-    margin-top: 100px;>
+<div class="w-full max-w-[70rem] mx-auto transition-all duration-200 p-4 bg-transparent border border-transparent rounded-xl justify-between items-center">
+      <div class="flex flex-col items-center justify-center w-full" style="margin-top: 100px;">
          <div class="flex max-w-[70rem] flex-col items-center w-full h-full min-h-screen gap-2 p-4 ">
 
                 
@@ -624,3 +622,15 @@
   }
 });</code></div>
                                         </div>
+
+                        </div>
+                    </div>
+                </div>
+                </main>
+         </div>
+      </div>
+    </div>
+                </div>
+            </div>
+        </div>
+    </div>
