@@ -1,8 +1,3 @@
-# Old HTML files (deprecated, replaced by PHP SPA)
-complete/index2.html
-complete/index3.html
-complete/index4.html
-
 # Temporary files
 *.tmp
 *.bak
