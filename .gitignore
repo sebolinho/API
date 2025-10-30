@@ -1,0 +1,19 @@
+# Development files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# PHP
+vendor/
+composer.lock
+
+# Logs
+*.log
+
+# Temporary files
+/tmp/
