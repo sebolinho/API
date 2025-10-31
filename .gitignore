@@ -17,3 +17,7 @@ composer.lock
 
 # Temporary files
 /tmp/
+
+# Backup files
+*-backup.php
+*.bak

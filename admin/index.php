@@ -1,0 +1,650 @@
+<?php
+session_start();
+require_once 'Config.php';
+
+// Simple password protection (you should change this!)
+$ADMIN_PASSWORD = 'admin123';
+
+// Handle login
+if (isset($_POST['login'])) {
+    if ($_POST['password'] === $ADMIN_PASSWORD) {
+        $_SESSION['admin_logged_in'] = true;
+    } else {
+        $error = 'Invalid password';
+    }
+}
+
+// Handle logout
+if (isset($_GET['logout'])) {
+    session_destroy();
+    header('Location: index.php');
+    exit;
+}
+
+// Handle save
+if (isset($_POST['save']) && isset($_SESSION['admin_logged_in'])) {
+    $config = Config::load();
+    
+    // Update site settings
+    $config['site'] = [
+        'title' => $_POST['site_title'] ?? '',
+        'logo_text' => $_POST['logo_text'] ?? '',
+        'headline' => $_POST['headline'] ?? '',
+        'subheadline' => $_POST['subheadline'] ?? '',
+        'get_started_text' => $_POST['get_started_text'] ?? '',
+        'test_player_text' => $_POST['test_player_text'] ?? '',
+        'movies_count' => $_POST['movies_count'] ?? '',
+        'shows_count' => $_POST['shows_count'] ?? '',
+        'anime_count' => $_POST['anime_count'] ?? '',
+        'estimate_text' => $_POST['estimate_text'] ?? '',
+        'copyright' => $_POST['copyright'] ?? ''
+    ];
+    
+    // Update navigation
+    $config['navigation'] = [
+        'welcome_text' => $_POST['welcome_text'] ?? '',
+        'player_text' => $_POST['player_text'] ?? '',
+        'docs_text' => $_POST['docs_text'] ?? ''
+    ];
+    
+    // Update social links
+    $config['social'] = [
+        'telegram_url' => $_POST['telegram_url'] ?? '',
+        'telegram_button_text' => $_POST['telegram_button_text'] ?? '',
+        'discord_url' => $_POST['discord_url'] ?? ''
+    ];
+    
+    // Update features
+    $config['features'] = [
+        'easy_title' => $_POST['easy_title'] ?? '',
+        'easy_desc' => $_POST['easy_desc'] ?? '',
+        'library_title' => $_POST['library_title'] ?? '',
+        'library_desc' => $_POST['library_desc'] ?? '',
+        'custom_title' => $_POST['custom_title'] ?? '',
+        'custom_desc' => $_POST['custom_desc'] ?? '',
+        'update_title' => $_POST['update_title'] ?? '',
+        'update_desc' => $_POST['update_desc'] ?? '',
+        'quality_title' => $_POST['quality_title'] ?? '',
+        'quality_desc' => $_POST['quality_desc'] ?? ''
+    ];
+    
+    // Update colors
+    $config['colors'] = [
+        'navbar_bg' => $_POST['navbar_bg'] ?? '',
+        'navbar_bg_dark' => $_POST['navbar_bg_dark'] ?? '',
+        'navbar_hover' => $_POST['navbar_hover'] ?? '',
+        'navbar_selected_bg' => $_POST['navbar_selected_bg'] ?? '',
+        'navbar_selected_bg_dark' => $_POST['navbar_selected_bg_dark'] ?? '',
+        'text_primary' => $_POST['text_primary'] ?? '',
+        'text_secondary' => $_POST['text_secondary'] ?? '',
+        'button_telegram_bg' => $_POST['button_telegram_bg'] ?? '',
+        'button_telegram2_bg' => $_POST['button_telegram2_bg'] ?? ''
+    ];
+    
+    // Update TMDB
+    $config['tmdb'] = [
+        'api_key' => $_POST['tmdb_api_key'] ?? '',
+        'enabled' => isset($_POST['tmdb_enabled'])
+    ];
+    
+    Config::save($config);
+    $success = 'Settings saved successfully!';
+}
+
+// Check if logged in
+if (!isset($_SESSION['admin_logged_in'])) {
+    ?>
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Admin Login</title>
+        <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                min-height: 100vh;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            .login-container {
+                background: white;
+                padding: 2rem;
+                border-radius: 10px;
+                box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+                width: 100%;
+                max-width: 400px;
+            }
+            h1 { margin-bottom: 1.5rem; color: #333; text-align: center; }
+            .form-group { margin-bottom: 1rem; }
+            label { display: block; margin-bottom: 0.5rem; color: #555; font-weight: 500; }
+            input[type="password"] {
+                width: 100%;
+                padding: 0.75rem;
+                border: 2px solid #e1e8ed;
+                border-radius: 5px;
+                font-size: 1rem;
+                transition: border-color 0.3s;
+            }
+            input[type="password"]:focus {
+                outline: none;
+                border-color: #667eea;
+            }
+            button {
+                width: 100%;
+                padding: 0.75rem;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                border: none;
+                border-radius: 5px;
+                font-size: 1rem;
+                font-weight: 600;
+                cursor: pointer;
+                transition: transform 0.2s;
+            }
+            button:hover { transform: translateY(-2px); }
+            .error {
+                background: #fee;
+                color: #c33;
+                padding: 0.75rem;
+                border-radius: 5px;
+                margin-bottom: 1rem;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="login-container">
+            <h1>🔐 Admin Panel</h1>
+            <?php if (isset($error)): ?>
+                <div class="error"><?= htmlspecialchars($error) ?></div>
+            <?php endif; ?>
+            <form method="POST">
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required autofocus>
+                </div>
+                <button type="submit" name="login">Login</button>
+            </form>
+        </div>
+    </body>
+    </html>
+    <?php
+    exit;
+}
+
+// Load current config
+$config = Config::load();
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - VidLink</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1.5rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 { font-size: 1.5rem; }
+        .logout-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .logout-btn:hover { background: rgba(255,255,255,0.3); }
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 1rem;
+            border-radius: 5px;
+            margin-bottom: 1.5rem;
+            border: 1px solid #c3e6cb;
+        }
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+        .tab-btn {
+            background: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .tab-btn:hover { background: #f0f0f0; }
+        .tab-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .tab-content {
+            display: none;
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .tab-content.active { display: block; }
+        .form-section {
+            margin-bottom: 2rem;
+        }
+        .form-section h3 {
+            color: #667eea;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #555;
+            font-weight: 500;
+        }
+        input[type="text"],
+        input[type="url"],
+        textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e1e8ed;
+            border-radius: 5px;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: border-color 0.3s;
+        }
+        input[type="text"]:focus,
+        input[type="url"]:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        .color-input-group {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+        input[type="color"] {
+            width: 60px;
+            height: 40px;
+            border: 2px solid #e1e8ed;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+        .save-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+            position: sticky;
+            bottom: 2rem;
+            width: 100%;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        .save-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+        }
+        .preview-link {
+            display: inline-block;
+            background: #28a745;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            text-decoration: none;
+            margin-left: 1rem;
+        }
+        .preview-link:hover { background: #218838; }
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <h1>⚙️ Admin Panel</h1>
+            <div>
+                <a href="../" class="preview-link" target="_blank">👁️ Preview Site</a>
+                <a href="?logout" class="logout-btn">Logout</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="container">
+        <?php if (isset($success)): ?>
+            <div class="success"><?= htmlspecialchars($success) ?></div>
+        <?php endif; ?>
+        
+        <div class="tabs">
+            <button class="tab-btn active" onclick="showTab('content')">📝 Content</button>
+            <button class="tab-btn" onclick="showTab('navigation')">🧭 Navigation</button>
+            <button class="tab-btn" onclick="showTab('social')">💬 Social Links</button>
+            <button class="tab-btn" onclick="showTab('features')">⭐ Features</button>
+            <button class="tab-btn" onclick="showTab('colors')">🎨 Colors</button>
+            <button class="tab-btn" onclick="showTab('tmdb')">🎬 TMDB API</button>
+        </div>
+        
+        <form method="POST">
+            <!-- Content Tab -->
+            <div id="content" class="tab-content active">
+                <div class="form-section">
+                    <h3>Site Information</h3>
+                    <div class="form-group">
+                        <label>Site Title</label>
+                        <input type="text" name="site_title" value="<?= htmlspecialchars($config['site']['title'] ?? '') ?>">
+                    </div>
+                    <div class="form-group">
+                        <label>Logo Text</label>
+                        <input type="text" name="logo_text" value="<?= htmlspecialchars($config['site']['logo_text'] ?? '') ?>">
+                    </div>
+                    <div class="form-group">
+                        <label>Main Headline</label>
+                        <input type="text" name="headline" value="<?= htmlspecialchars($config['site']['headline'] ?? '') ?>">
+                    </div>
+                    <div class="form-group">
+                        <label>Subheadline</label>
+                        <input type="text" name="subheadline" value="<?= htmlspecialchars($config['site']['subheadline'] ?? '') ?>">
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <h3>Buttons & Labels</h3>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label>Get Started Button</label>
+                            <input type="text" name="get_started_text" value="<?= htmlspecialchars($config['site']['get_started_text'] ?? '') ?>">
+                        </div>
+                        <div class="form-group">
+                            <label>Test Player Text</label>
+                            <input type="text" name="test_player_text" value="<?= htmlspecialchars($config['site']['test_player_text'] ?? '') ?>">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <h3>Statistics</h3>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label>Movies Count</label>
+                            <input type="text" name="movies_count" value="<?= htmlspecialchars($config['site']['movies_count'] ?? '') ?>">
+                        </div>
+                        <div class="form-group">
+                            <label>Shows Count</label>
+                            <input type="text" name="shows_count" value="<?= htmlspecialchars($config['site']['shows_count'] ?? '') ?>">
+                        </div>
+                        <div class="form-group">
+                            <label>Anime Count</label>
+                            <input type="text" name="anime_count" value="<?= htmlspecialchars($config['site']['anime_count'] ?? '') ?>">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Estimate Text</label>
+                        <textarea name="estimate_text"><?= htmlspecialchars($config['site']['estimate_text'] ?? '') ?></textarea>
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <h3>Footer</h3>
+                    <div class="form-group">
+                        <label>Copyright Text</label>
+                        <input type="text" name="copyright" value="<?= htmlspecialchars($config['site']['copyright'] ?? '') ?>">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Navigation Tab -->
+            <div id="navigation" class="tab-content">
+                <div class="form-section">
+                    <h3>Navigation Menu</h3>
+                    <div class="form-group">
+                        <label>Welcome Text</label>
+                        <input type="text" name="welcome_text" value="<?= htmlspecialchars($config['navigation']['welcome_text'] ?? '') ?>">
+                    </div>
+                    <div class="form-group">
+                        <label>Player Text</label>
+                        <input type="text" name="player_text" value="<?= htmlspecialchars($config['navigation']['player_text'] ?? '') ?>">
+                    </div>
+                    <div class="form-group">
+                        <label>Docs Text</label>
+                        <input type="text" name="docs_text" value="<?= htmlspecialchars($config['navigation']['docs_text'] ?? '') ?>">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Social Tab -->
+            <div id="social" class="tab-content">
+                <div class="form-section">
+                    <h3>Social Media Links</h3>
+                    <div class="form-group">
+                        <label>Telegram URL</label>
+                        <input type="url" name="telegram_url" value="<?= htmlspecialchars($config['social']['telegram_url'] ?? '') ?>">
+                    </div>
+                    <div class="form-group">
+                        <label>Telegram Button Text</label>
+                        <input type="text" name="telegram_button_text" value="<?= htmlspecialchars($config['social']['telegram_button_text'] ?? '') ?>">
+                    </div>
+                    <div class="form-group">
+                        <label>Discord URL</label>
+                        <input type="url" name="discord_url" value="<?= htmlspecialchars($config['social']['discord_url'] ?? '') ?>">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Features Tab -->
+            <div id="features" class="tab-content">
+                <div class="form-section">
+                    <h3>Feature Cards</h3>
+                    
+                    <h4 style="margin: 1.5rem 0 1rem; color: #764ba2;">Easy to Use</h4>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label>Title</label>
+                            <input type="text" name="easy_title" value="<?= htmlspecialchars($config['features']['easy_title'] ?? '') ?>">
+                        </div>
+                        <div class="form-group">
+                            <label>Description</label>
+                            <textarea name="easy_desc"><?= htmlspecialchars($config['features']['easy_desc'] ?? '') ?></textarea>
+                        </div>
+                    </div>
+                    
+                    <h4 style="margin: 1.5rem 0 1rem; color: #764ba2;">Huge Library</h4>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label>Title</label>
+                            <input type="text" name="library_title" value="<?= htmlspecialchars($config['features']['library_title'] ?? '') ?>">
+                        </div>
+                        <div class="form-group">
+                            <label>Description</label>
+                            <textarea name="library_desc"><?= htmlspecialchars($config['features']['library_desc'] ?? '') ?></textarea>
+                        </div>
+                    </div>
+                    
+                    <h4 style="margin: 1.5rem 0 1rem; color: #764ba2;">Customizable</h4>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label>Title</label>
+                            <input type="text" name="custom_title" value="<?= htmlspecialchars($config['features']['custom_title'] ?? '') ?>">
+                        </div>
+                        <div class="form-group">
+                            <label>Description</label>
+                            <textarea name="custom_desc"><?= htmlspecialchars($config['features']['custom_desc'] ?? '') ?></textarea>
+                        </div>
+                    </div>
+                    
+                    <h4 style="margin: 1.5rem 0 1rem; color: #764ba2;">Auto Update</h4>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label>Title</label>
+                            <input type="text" name="update_title" value="<?= htmlspecialchars($config['features']['update_title'] ?? '') ?>">
+                        </div>
+                        <div class="form-group">
+                            <label>Description</label>
+                            <textarea name="update_desc"><?= htmlspecialchars($config['features']['update_desc'] ?? '') ?></textarea>
+                        </div>
+                    </div>
+                    
+                    <h4 style="margin: 1.5rem 0 1rem; color: #764ba2;">Highest Quality</h4>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label>Title</label>
+                            <input type="text" name="quality_title" value="<?= htmlspecialchars($config['features']['quality_title'] ?? '') ?>">
+                        </div>
+                        <div class="form-group">
+                            <label>Description</label>
+                            <textarea name="quality_desc"><?= htmlspecialchars($config['features']['quality_desc'] ?? '') ?></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Colors Tab -->
+            <div id="colors" class="tab-content">
+                <div class="form-section">
+                    <h3>Navigation Bar Colors</h3>
+                    <div class="form-group">
+                        <label>Navbar Background (Light Mode)</label>
+                        <input type="text" name="navbar_bg" value="<?= htmlspecialchars($config['colors']['navbar_bg'] ?? '') ?>" placeholder="rgba(255, 255, 255, 0.5)">
+                        <small style="color: #888;">Use RGBA format: rgba(255, 255, 255, 0.5)</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Navbar Background (Dark Mode)</label>
+                        <input type="text" name="navbar_bg_dark" value="<?= htmlspecialchars($config['colors']['navbar_bg_dark'] ?? '') ?>" placeholder="rgba(31, 41, 55, 0.5)">
+                    </div>
+                    <div class="form-group">
+                        <label>Hover Color</label>
+                        <input type="text" name="navbar_hover" value="<?= htmlspecialchars($config['colors']['navbar_hover'] ?? '') ?>" placeholder="rgb(147, 51, 234)">
+                    </div>
+                    <div class="form-group">
+                        <label>Selected Background (Light Mode)</label>
+                        <input type="text" name="navbar_selected_bg" value="<?= htmlspecialchars($config['colors']['navbar_selected_bg'] ?? '') ?>" placeholder="linear-gradient(to right, rgb(147, 51, 234), rgb(126, 34, 206))">
+                    </div>
+                    <div class="form-group">
+                        <label>Selected Background (Dark Mode)</label>
+                        <input type="text" name="navbar_selected_bg_dark" value="<?= htmlspecialchars($config['colors']['navbar_selected_bg_dark'] ?? '') ?>" placeholder="linear-gradient(to right, rgb(168, 85, 247), rgb(147, 51, 234))">
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <h3>Text Colors</h3>
+                    <div class="form-group">
+                        <label>Primary Text Color</label>
+                        <input type="text" name="text_primary" value="<?= htmlspecialchars($config['colors']['text_primary'] ?? '') ?>" placeholder="rgb(255, 255, 255)">
+                    </div>
+                    <div class="form-group">
+                        <label>Secondary Text Color</label>
+                        <input type="text" name="text_secondary" value="<?= htmlspecialchars($config['colors']['text_secondary'] ?? '') ?>" placeholder="rgba(255, 255, 255, 0.8)">
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <h3>Button Colors</h3>
+                    <div class="form-group">
+                        <label>Telegram Button 1 Background</label>
+                        <input type="text" name="button_telegram_bg" value="<?= htmlspecialchars($config['colors']['button_telegram_bg'] ?? '') ?>" placeholder="rgba(37, 99, 235, 0.5)">
+                    </div>
+                    <div class="form-group">
+                        <label>Telegram Button 2 Background</label>
+                        <input type="text" name="button_telegram2_bg" value="<?= htmlspecialchars($config['colors']['button_telegram2_bg'] ?? '') ?>" placeholder="rgba(79, 70, 229, 0.2)">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- TMDB Tab -->
+            <div id="tmdb" class="tab-content">
+                <div class="form-section">
+                    <h3>TMDB API Integration</h3>
+                    <p style="color: #666; margin-bottom: 1rem;">
+                        Integrate with The Movie Database (TMDB) to automatically fetch trending movies, TV shows, and anime posters.
+                    </p>
+                    <div class="form-group">
+                        <label>TMDB API Key</label>
+                        <input type="text" name="tmdb_api_key" value="<?= htmlspecialchars($config['tmdb']['api_key'] ?? '') ?>" placeholder="Your TMDB API Key">
+                        <small style="color: #888;">Get your API key from <a href="https://www.themoviedb.org/settings/api" target="_blank">TMDB</a></small>
+                    </div>
+                    <div class="form-group">
+                        <div class="checkbox-group">
+                            <input type="checkbox" name="tmdb_enabled" id="tmdb_enabled" <?= ($config['tmdb']['enabled'] ?? false) ? 'checked' : '' ?>>
+                            <label for="tmdb_enabled" style="margin: 0;">Enable TMDB Integration</label>
+                        </div>
+                        <small style="color: #888;">When enabled, movie posters will be fetched from TMDB instead of using static images</small>
+                    </div>
+                </div>
+            </div>
+            
+            <button type="submit" name="save" class="save-btn">💾 Save All Changes</button>
+        </form>
+    </div>
+    
+    <script>
+        function showTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+    </script>
+</body>
+</html>
