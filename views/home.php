@@ -178,8 +178,8 @@ function renderPosterColumns($posters, $startIndex, $count) {
               </div>
             </div>
           </div>
-          <div class="w-full bg-black py-12 px-4 flex justify-center"></div>
-          <div class="flex flex-col gap-4 my-10" style="width: 95%; max-width: 1100px; margin: 0 auto;">
+          <div class="w-full bg-black py-20 px-4 flex justify-center"></div>
+          <div class="flex flex-col gap-4 my-10" style="width: 95%; max-width: 1100px; margin: 0 auto; position: relative; z-index: 20;">
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-2.5">
               <div class="p-4 space-y-3 transition-all hover:-translate-y-1 rounded-xl bg-white/5 backdrop-blur-sm border border-white/10 hover:border-white/20 hover:bg-white/[0.07]">
                 <div class="p-1.5 w-fit rounded-lg bg-indigo-500/10">
