@@ -3,13 +3,15 @@ class TMDB {
     private $apiKey;
     private $baseUrl = 'https://api.themoviedb.org/3';
     private $imageBaseUrl = 'https://image.tmdb.org/t/p/w500';
+    private $language;
     
-    public function __construct($apiKey) {
+    public function __construct($apiKey, $language = 'en-US') {
         $this->apiKey = $apiKey;
+        $this->language = $language;
     }
     
     public function getTrending($mediaType = 'all', $timeWindow = 'week', $limit = 12) {
-        $url = "{$this->baseUrl}/trending/{$mediaType}/{$timeWindow}?api_key={$this->apiKey}";
+        $url = "{$this->baseUrl}/trending/{$mediaType}/{$timeWindow}?api_key={$this->apiKey}&language={$this->language}";
         $data = $this->makeRequest($url);
         
         if ($data && isset($data['results'])) {
@@ -38,7 +40,7 @@ class TMDB {
     
     public function getPopularAnime($limit = 12) {
         // Using TV endpoint with anime genre filter
-        $url = "{$this->baseUrl}/discover/tv?api_key={$this->apiKey}&with_genres=16&sort_by=popularity.desc";
+        $url = "{$this->baseUrl}/discover/tv?api_key={$this->apiKey}&with_genres=16&sort_by=popularity.desc&language={$this->language}";
         $data = $this->makeRequest($url);
         
         if ($data && isset($data['results'])) {

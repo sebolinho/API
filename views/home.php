@@ -7,7 +7,8 @@ $config = Config::load();
 // Get TMDB posters if enabled
 $posterImages = [];
 if ($config['tmdb']['enabled'] && !empty($config['tmdb']['api_key'])) {
-    $tmdb = new TMDB($config['tmdb']['api_key']);
+    $language = $config['tmdb']['language'] ?? 'en-US';
+    $tmdb = new TMDB($config['tmdb']['api_key'], $language);
     $posterImages = $tmdb->getMixedTrending(36);
 }
 

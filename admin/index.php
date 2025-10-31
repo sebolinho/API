@@ -84,7 +84,14 @@ if (isset($_POST['save']) && isset($_SESSION['admin_logged_in'])) {
     // Update TMDB
     $config['tmdb'] = [
         'api_key' => $_POST['tmdb_api_key'] ?? '',
-        'enabled' => isset($_POST['tmdb_enabled'])
+        'enabled' => isset($_POST['tmdb_enabled']),
+        'language' => $_POST['tmdb_language'] ?? 'en-US'
+    ];
+    
+    // Update settings
+    $config['settings'] = [
+        'favicon' => $_POST['favicon_path'] ?? 'complete/resources/image_1.ico',
+        'player_embed_base' => $_POST['player_embed_base'] ?? 'https://vidlink.pro/movie/94997'
     ];
     
     Config::save($config);
@@ -378,6 +385,7 @@ $config = Config::load();
             <button class="tab-btn" onclick="showTab('features')">⭐ Features</button>
             <button class="tab-btn" onclick="showTab('colors')">🎨 Colors</button>
             <button class="tab-btn" onclick="showTab('tmdb')">🎬 TMDB API</button>
+            <button class="tab-btn" onclick="showTab('settings')">⚙️ Settings</button>
         </div>
         
         <form method="POST">
@@ -618,11 +626,42 @@ $config = Config::load();
                         <small style="color: #888;">Get your API key from <a href="https://www.themoviedb.org/settings/api" target="_blank">TMDB</a></small>
                     </div>
                     <div class="form-group">
+                        <label>Language / Idioma</label>
+                        <select name="tmdb_language" style="width: 100%; padding: 0.75rem; border: 2px solid #e1e8ed; border-radius: 5px; font-size: 1rem;">
+                            <option value="en-US" <?= ($config['tmdb']['language'] ?? 'en-US') === 'en-US' ? 'selected' : '' ?>>English (en-US)</option>
+                            <option value="pt-BR" <?= ($config['tmdb']['language'] ?? '') === 'pt-BR' ? 'selected' : '' ?>>Português Brasil (pt-BR)</option>
+                            <option value="es-ES" <?= ($config['tmdb']['language'] ?? '') === 'es-ES' ? 'selected' : '' ?>>Español (es-ES)</option>
+                            <option value="fr-FR" <?= ($config['tmdb']['language'] ?? '') === 'fr-FR' ? 'selected' : '' ?>>Français (fr-FR)</option>
+                            <option value="de-DE" <?= ($config['tmdb']['language'] ?? '') === 'de-DE' ? 'selected' : '' ?>>Deutsch (de-DE)</option>
+                            <option value="it-IT" <?= ($config['tmdb']['language'] ?? '') === 'it-IT' ? 'selected' : '' ?>>Italiano (it-IT)</option>
+                            <option value="ja-JP" <?= ($config['tmdb']['language'] ?? '') === 'ja-JP' ? 'selected' : '' ?>>日本語 (ja-JP)</option>
+                            <option value="ko-KR" <?= ($config['tmdb']['language'] ?? '') === 'ko-KR' ? 'selected' : '' ?>>한국어 (ko-KR)</option>
+                        </select>
+                        <small style="color: #888;">Select the language for movie/TV show titles and descriptions</small>
+                    </div>
+                    <div class="form-group">
                         <div class="checkbox-group">
                             <input type="checkbox" name="tmdb_enabled" id="tmdb_enabled" <?= ($config['tmdb']['enabled'] ?? false) ? 'checked' : '' ?>>
                             <label for="tmdb_enabled" style="margin: 0;">Enable TMDB Integration</label>
                         </div>
                         <small style="color: #888;">When enabled, movie posters will be fetched from TMDB instead of using static images</small>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Settings Tab -->
+            <div id="settings" class="tab-content">
+                <div class="form-section">
+                    <h3>Site Settings</h3>
+                    <div class="form-group">
+                        <label>Favicon Path</label>
+                        <input type="text" name="favicon_path" value="<?= htmlspecialchars($config['settings']['favicon'] ?? 'complete/resources/image_1.ico') ?>" placeholder="complete/resources/image_1.ico">
+                        <small style="color: #888;">Path to your favicon file (relative to site root)</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Player Embed Base URL</label>
+                        <input type="url" name="player_embed_base" value="<?= htmlspecialchars($config['settings']['player_embed_base'] ?? 'https://vidlink.pro/movie/94997') ?>" placeholder="https://vidlink.pro/movie/94997">
+                        <small style="color: #888;">Default embed URL for the player page</small>
                     </div>
                 </div>
             </div>

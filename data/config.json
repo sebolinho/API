@@ -47,6 +47,11 @@
   },
   "tmdb": {
     "api_key": "194b4bfd824321aecea17681a399d39e",
-    "enabled": true
+    "enabled": true,
+    "language": "pt-BR"
+  },
+  "settings": {
+    "favicon": "complete/resources/image_1.ico",
+    "player_embed_base": "https://vidlink.pro/movie/94997"
   }
 }
