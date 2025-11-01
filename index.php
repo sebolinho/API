@@ -36,6 +36,12 @@ $siteTitle = $config['site']['title'] ?? 'VidLink - Biggest and Fastest Streamin
             include 'views/docs.php';
             include 'views/partials/footer.php';
             break;
+        case 'content':
+            // Include header for non-home pages
+            include 'views/partials/header.php';
+            include 'views/content.php';
+            include 'views/partials/footer.php';
+            break;
         case 'home':
         default:
             // Home page has header/footer embedded in the content
