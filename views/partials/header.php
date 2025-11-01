@@ -24,7 +24,7 @@ $logo_text = $config['site']['logo_text'] ?? 'MEGAEMBED';
             </a>
         </div>
         <nav class="flex-1 flex justify-center max-w-[45%] sm:max-w-none px-2">
-            <div class="flex items-center bg-white/98 dark:bg-gray-800/50 backdrop-blur-sm rounded-full p-1.5 w-full sm:w-auto border border-purple-100 dark:border-purple-900/50 shadow-lg shadow-purple-100/20 dark:shadow-purple-900/20" style="width: 100%; max-width: 328px;">
+            <div class="flex items-center bg-white/98 dark:bg-gray-800/50 backdrop-blur-sm rounded-full p-1.5 w-full sm:w-auto border border-purple-100 dark:border-purple-900/50 shadow-lg shadow-purple-100/20 dark:shadow-purple-900/20" style="width: 100%; max-width: 420px;">
                 <a class="flex-1 px-2.5 sm:px-4 py-1.5 rounded-full transition-all duration-200 relative flex items-center justify-center gap-1.5 sm:gap-2 <?php echo ($page === 'home') ? '' : 'hover-nav-link'; ?>" href="?page=home" style="<?php echo ($page === 'home') ? 'color: ' . $text_primary : 'color: rgba(100, 116, 139, 1)'; ?>">
                     <?php if ($page === 'home'): ?>
                     <div class="absolute inset-0 rounded-full" style="opacity:1; background: <?= htmlspecialchars($navbar_selected_bg_dark) ?>"></div>
@@ -58,6 +58,17 @@ $logo_text = $config['site']['logo_text'] ?? 'MEGAEMBED';
                         </svg>
                     </span>
                     <span class="relative z-10 tracking-wide hidden lg:block text-sm font-medium"><?= htmlspecialchars($nav_docs) ?></span>
+                </a>
+                <a class="flex-1 px-2.5 sm:px-4 py-1.5 rounded-full transition-all duration-200 relative flex items-center justify-center gap-1.5 sm:gap-2 <?php echo ($page === 'content') ? '' : 'hover-nav-link'; ?>" href="?page=content" style="<?php echo ($page === 'content') ? 'color: ' . $text_primary : 'color: rgba(100, 116, 139, 1)'; ?>">
+                    <?php if ($page === 'content'): ?>
+                    <div class="absolute inset-0 rounded-full" style="opacity:1; background: <?= htmlspecialchars($navbar_selected_bg_dark) ?>"></div>
+                    <?php endif; ?>
+                    <span class="relative z-10">
+                        <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true" class="w-5 h-5" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                        </svg>
+                    </span>
+                    <span class="relative z-10 tracking-wide hidden lg:block text-sm font-medium">Conteúdo</span>
                 </a>
             </div>
         </nav>
