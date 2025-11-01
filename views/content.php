@@ -167,10 +167,10 @@ function copyTMDB(tmdbId) {
 </script>
 
 <style>
-.content-card {
+#page-content .content-card {
     cursor: pointer;
 }
-.line-clamp-2 {
+#page-content .line-clamp-2 {
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
