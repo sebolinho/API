@@ -60,8 +60,8 @@ $context = stream_context_create([
         'ignore_errors' => true
     ],
     'ssl' => [
-        'verify_peer' => false,
-        'verify_peer_name' => false
+        'verify_peer' => true,
+        'verify_peer_name' => true
     ]
 ]);
 
