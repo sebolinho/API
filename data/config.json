@@ -53,5 +53,45 @@
   "settings": {
     "favicon": "complete/resources/image_1.ico",
     "player_embed_base": "https://vidlink.pro/movie/94997"
-  }
+  },
+  "tv_channels": [
+    {
+      "id": "1",
+      "name": "Sample Channel 1",
+      "slug": "sample-channel-1",
+      "url": "https://example.com/tv/sample-channel-1"
+    },
+    {
+      "id": "2",
+      "name": "Sample Channel 2",
+      "slug": "sample-channel-2",
+      "url": "https://example.com/tv/sample-channel-2"
+    }
+  ],
+  "modules": [
+    {
+      "id": "movie",
+      "name": "Movie Player",
+      "enabled": true,
+      "url_format": "movie",
+      "icon": "play-circle",
+      "order": 1
+    },
+    {
+      "id": "series",
+      "name": "Series Player",
+      "enabled": true,
+      "url_format": "tv",
+      "icon": "tv",
+      "order": 2
+    },
+    {
+      "id": "tv",
+      "name": "TV Player",
+      "enabled": true,
+      "url_format": "tv",
+      "icon": "signal",
+      "order": 3
+    }
+  ]
 }

@@ -1,19 +1,36 @@
-<div class="flex flex-col items-center justify-center w-full" style="margin-top: 100px;">
+<?php
+require_once __DIR__ . '/../admin/Config.php';
+$config = Config::load();
+$config_modules = $config['modules'] ?? [];
+$enabled_ids = array_column($config_modules, 'id');
+
+// Default modules if not configured
+$all_modules = [
+    'movie' => 'Movie Player',
+    'series' => 'Series Player',
+    'tv' => 'TV Player'
+];
+
+// Use all if none configured, otherwise use only enabled
+$display_modules = empty($config_modules) ? $all_modules : array_intersect_key($all_modules, array_flip($enabled_ids));
+?>
+<div class="flex flex-col items-center justify-center w-full" style="margin-top: 120px;">
     <div class="flex max-w-[70rem] flex-col items-center w-full h-full min-h-screen gap-2 p-4">
         <main id="PlayerTester" class="flex max-w-[70rem] flex-col items-center w-full h-full min-h-screen gap-2 p-4 bg-gray-900 text-white">
             <div class="flex p-1 h-fit gap-2 items-center flex-nowrap overflow-x-scroll scrollbar-hide bg-black/20 rounded-full new">
-                <button id="tab-movie" class="tab-button group" data-selected="true">
+                <?php 
+                $first = true;
+                foreach ($display_modules as $id => $name): 
+                    $tab_id = ($id === 'series') ? 'tv' : ($id === 'tv' ? 'tvplayer' : $id);
+                ?>
+                <button id="tab-<?= $tab_id ?>" class="tab-button group"<?= $first ? ' data-selected="true"' : '' ?>>
                     <span class="cursor-pill"></span>
-                    <span class="relative z-10">Movie Player</span>
+                    <span class="relative z-10"><?= htmlspecialchars($name) ?></span>
                 </button>
-                <button id="tab-tv" class="tab-button group">
-                    <span class="cursor-pill"></span>
-                    <span class="relative z-10">Series Player</span>
-                </button>
-                <button id="tab-anime" class="tab-button group">
-                    <span class="cursor-pill"></span>
-                    <span class="relative z-10">Anime Player</span>
-                </button>
+                <?php 
+                $first = false;
+                endforeach; 
+                ?>
             </div>
 
             <div class="w-full py-3 px-1">
@@ -41,24 +58,25 @@
                     </div>
                 </div>
 
-                <div id="content-anime" class="tab-content">
+                <div id="content-tvplayer" class="tab-content">
                     <div class="fields-wrapper">
                         <div class="input-container flex-grow">
-                            <input id="anime-id" type="text" class="input-field" value="40748" placeholder=" ">
-                            <label for="anime-id" class="input-label">Mal Id</label>
+                            <label for="tv-channel-select" class="input-label" style="position: relative; left: 0; top: 0; transform: none; margin-bottom: 0.5rem; display: block;">Select Channel</label>
+                            <select id="tv-channel-select" class="input-field" style="padding: 0.75rem; background: #2a2a2a; border: 1px solid #444; color: white; border-radius: 8px; width: 100%; cursor: pointer;">
+                                <?php
+                                require_once __DIR__ . '/../admin/Config.php';
+                                $config = Config::load();
+                                $channels = $config['tv_channels'] ?? [];
+                                if (empty($channels)) {
+                                    echo '<option value="">No channels available</option>';
+                                } else {
+                                    foreach ($channels as $channel) {
+                                        echo '<option value="' . htmlspecialchars($channel['slug']) . '">' . htmlspecialchars($channel['name']) . '</option>';
+                                    }
+                                }
+                                ?>
+                            </select>
                         </div>
-                        <div class="input-container small-input">
-                            <input id="anime-episode" type="number" class="input-field" value="1" placeholder=" ">
-                            <label for="anime-episode" class="input-label">E</label>
-                        </div>
-                        <button id="anime-dub" class="dub-button" data-active="false">DUB</button>
-                        <label for="anime-fallback" class="flex items-center gap-2 cursor-pointer">
-                            <div class="relative">
-                                <input type="checkbox" id="anime-fallback" class="sr-only peer">
-                                <div class="w-10 h-6 bg-gray-600 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                            </div>
-                            <span class="text-sm">Fallback</span>
-                        </label>
                     </div>
                 </div>
 
@@ -86,82 +104,83 @@
 </div>
 
 <style>
-    /* Hide scrollbars */
-    .scrollbar-hide::-webkit-scrollbar { display: none; }
-    .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+    /* Scope all player styles to the player page container */
+    #page-player .scrollbar-hide::-webkit-scrollbar { display: none; }
+    #page-player .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 
-    /* Tab styles */
-    .tab-button {
+    /* Tab styles - scoped to player page */
+    #page-player .tab-button {
         position: relative; display: flex; justify-content: center; align-items: center;
         padding: 0.5rem 1rem; height: 2.25rem; border-radius: 9999px;
         cursor: pointer; outline: none; -webkit-tap-highlight-color: transparent;
         transition: color 0.2s ease-in-out; color: #a1a1aa; font-size: 0.875rem;
     }
-    .tab-button:hover:not([data-selected="true"]) { color: #e4e4e7; }
-    .tab-button[data-selected="true"] { color: #fafafa; }
+    #page-player .tab-button:hover:not([data-selected="true"]) { color: #e4e4e7; }
+    #page-player .tab-button[data-selected="true"] { color: #fafafa; }
 
-    .cursor-pill {
+    #page-player .cursor-pill {
         position: absolute; inset: 0; z-index: 0; border-radius: 9999px;
-        background-color: #4f79a1;
+        background: <?= htmlspecialchars($navbar_selected_bg_dark) ?>;
         box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
         opacity: 0; transition: opacity 0.2s ease-in-out;
     }
-    .tab-button[data-selected="true"] .cursor-pill { opacity: 1; }
+    #page-player .tab-button[data-selected="true"] .cursor-pill { opacity: 1; }
+    #page-player .tab-button:hover:not([data-selected="true"]) { color: <?= htmlspecialchars($navbar_hover) ?>; }
 
-    .tab-content {
+    #page-player .tab-content {
         width: 100%; display: none; align-items: center; flex-direction: column;
         gap: 1rem; padding: 0px; border-radius: 10px;
     }
-    #content-tv, #content-anime {
+    #page-player #content-tv, #page-player #content-anime {
         width: 540px; align-items: center; margin-left: auto; margin-right: auto;
     }
     
-    .new {
+    #page-player .new {
         align-items: center; padding: 5px; background-color: #1c1c1c; border-radius: 100px;
     }
 
-    .fields-wrapper {
+    #page-player .fields-wrapper {
         display: flex; justify-content: center; gap: 1rem; width: 100%;
     }
-    .flex-grow { flex-grow: 1; }
-    .small-input { width: 4.5rem; flex-shrink: 0; }
+    #page-player .flex-grow { flex-grow: 1; }
+    #page-player .small-input { width: 4.5rem; flex-shrink: 0; }
     
-    .input-container {
+    #page-player .input-container {
         position: relative; background-color: #2a2a2a; border: 1px solid #444;
         border-radius: 8px; padding: 8px 12px; transition: background-color 0.15s ease;
     }
-    .input-container:focus-within { border-color: #4f79a1; }
+    #page-player .input-container:focus-within { border-color: #4f79a1; }
     
-    .input-label {
+    #page-player .input-label {
         position: absolute; pointer-events: none; left: 12px; top: 50%;
         transform: translateY(-50%); color: #a1a1aa;
         transition: transform 0.2s, font-size 0.2s, color 0.2s;
     }
     
-    .input-field {
+    #page-player .input-field {
         width: 100%; background-color: transparent; border: none; outline: none;
         color: #fff; font-size: 14px; padding-top: 12px;
     }
-    .input-field:focus + .input-label,
-    .input-field:not(:placeholder-shown) + .input-label {
+    #page-player .input-field:focus + .input-label,
+    #page-player .input-field:not(:placeholder-shown) + .input-label {
         transform: translateY(-110%) scale(0.85); color: #e4e4e7;
     }
     
-    .dub-button {
+    #page-player .dub-button {
         background-color: #555; color: #fff; padding: 10px;
         border-radius: 5px; cursor: pointer; transition: background-color 0.2s;
         height: 54px;
     }
-    .dub-button[data-active="true"] { background-color: #4f79a1; }
+    #page-player .dub-button[data-active="true"] { background-color: #4f79a1; }
 
-    .sr-only {
+    #page-player .sr-only {
         position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
         overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border-width: 0;
     }
-    .flex { display: flex; }
-    .items-center { align-items: center; }
-    .gap-4 { gap: 1rem; }
-    .cursor-pointer { cursor: pointer; }
+    #page-player .flex { display: flex; }
+    #page-player .items-center { align-items: center; }
+    #page-player .gap-4 { gap: 1rem; }
+    #page-player .cursor-pointer { cursor: pointer; }
 </style>
 
 <script>
@@ -173,10 +192,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const tvTmdb = document.getElementById('tv-tmdb');
     const tvSeason = document.getElementById('tv-season');
     const tvEpisode = document.getElementById('tv-episode');
-    const animeId = document.getElementById('anime-id');
-    const animeEpisode = document.getElementById('anime-episode');
-    const animeDub = document.getElementById('anime-dub');
-    const animeFallback = document.getElementById('anime-fallback');
+    const tvChannelSelect = document.getElementById('tv-channel-select');
     
     const videoUrl = document.getElementById('video-url');
     const videoIframe = document.getElementById('video-iframe');
@@ -215,12 +231,13 @@ document.addEventListener('DOMContentLoaded', function() {
             const season = tvSeason.value || '1';
             const episode = tvEpisode.value || '1';
             url = `https://vidlink.pro/tv/${tmdbId}/${season}/${episode}`;
-        } else if (activeTab === 'tab-anime') {
-            const id = animeId.value || '40748';
-            const episode = animeEpisode.value || '1';
-            const dubParam = animeDub.dataset.active === 'true' ? '/dub' : '';
-            const fallbackParam = animeFallback.checked ? '?fallback=true' : '';
-            url = `https://vidlink.pro/anime/${id}/${episode}${dubParam}${fallbackParam}`;
+        } else if (activeTab === 'tab-tvplayer') {
+            const channelSlug = tvChannelSelect.value;
+            if (channelSlug) {
+                url = `https://meulink/tv/${channelSlug}`;
+            } else {
+                url = 'https://meulink/tv/no-channel-selected';
+            }
         }
 
         videoUrl.textContent = url;
@@ -231,15 +248,13 @@ document.addEventListener('DOMContentLoaded', function() {
         button.addEventListener('click', () => switchTab(button));
     });
 
-    [movieTmdb, tvTmdb, tvSeason, tvEpisode, animeId, animeEpisode, animeFallback].forEach(input => {
-        input.addEventListener('input', updateUrl);
+    [movieTmdb, tvTmdb, tvSeason, tvEpisode].forEach(input => {
+        if (input) input.addEventListener('input', updateUrl);
     });
     
-    animeDub.addEventListener('click', function() {
-        const isActive = animeDub.dataset.active === 'true';
-        animeDub.dataset.active = !isActive;
-        updateUrl();
-    });
+    if (tvChannelSelect) {
+        tvChannelSelect.addEventListener('change', updateUrl);
+    }
 
     copyButton.addEventListener('click', function() {
         navigator.clipboard.writeText(videoUrl.textContent.trim())

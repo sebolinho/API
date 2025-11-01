@@ -19,29 +19,140 @@ $siteTitle = $config['site']['title'] ?? 'VidLink - Biggest and Fastest Streamin
 </head>
 <body>
     <?php
-    // Simple PHP SPA Router
-    $page = isset($_GET['page']) ? $_GET['page'] : 'home';
+    // Get initial page
+    $initial_page = isset($_GET['page']) ? $_GET['page'] : 'home';
+    ?>
     
-    // Route to appropriate view
-    switch ($page) {
-        case 'player':
-            // Include header for non-home pages
+    <!-- SPA Container -->
+    <div id="spa-container">
+        <!-- Home Page -->
+        <div id="page-home" class="spa-page" style="display: <?= $initial_page === 'home' ? 'block' : 'none' ?>">
+            <?php include 'views/home.php'; ?>
+        </div>
+        
+        <!-- Player Page -->
+        <div id="page-player" class="spa-page" style="display: <?= $initial_page === 'player' ? 'block' : 'none' ?>">
+            <?php 
+            $page = 'player';
             include 'views/partials/header.php';
             include 'views/player.php';
             include 'views/partials/footer.php';
-            break;
-        case 'docs':
-            // Include header for non-home pages
+            ?>
+        </div>
+        
+        <!-- Content Page -->
+        <div id="page-content" class="spa-page" style="display: <?= $initial_page === 'content' ? 'block' : 'none' ?>">
+            <?php
+            $page = 'content';
+            include 'views/partials/header.php';
+            include 'views/content.php';
+            include 'views/partials/footer.php';
+            ?>
+        </div>
+        
+        <!-- Docs Page -->
+        <div id="page-docs" class="spa-page" style="display: <?= $initial_page === 'docs' ? 'block' : 'none' ?>">
+            <?php
+            $page = 'docs';
             include 'views/partials/header.php';
             include 'views/docs.php';
             include 'views/partials/footer.php';
-            break;
-        case 'home':
-        default:
-            // Home page has header/footer embedded in the content
-            include 'views/home.php';
-            break;
+            ?>
+        </div>
+    </div>
+    
+    <style>
+    .spa-page {
+        animation: fadeIn 0.3s ease-in-out;
     }
-    ?>
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    </style>
+    
+    <script>
+    // Simple SPA navigation with smooth transitions
+    document.addEventListener('DOMContentLoaded', function() {
+        const pages = document.querySelectorAll('.spa-page');
+        let isNavigating = false;
+        
+        // Handle all navigation links
+        document.addEventListener('click', function(e) {
+            const link = e.target.closest('a[href^="?page="]');
+            if (link && !isNavigating) {
+                e.preventDefault();
+                const url = new URL(link.href);
+                const pageName = url.searchParams.get('page') || 'home';
+                navigateToPage(pageName);
+            }
+        });
+        
+        // Navigate to a specific page with smooth transition
+        function navigateToPage(pageName) {
+            if (isNavigating) return;
+            isNavigating = true;
+            
+            // Get current and target pages
+            const currentPage = document.querySelector('.spa-page[style*="display: block"]');
+            const targetPage = document.getElementById('page-' + pageName);
+            
+            if (!targetPage || currentPage === targetPage) {
+                isNavigating = false;
+                return;
+            }
+            
+            // Fade out current page
+            if (currentPage) {
+                currentPage.style.opacity = '0';
+                currentPage.style.transform = 'translateY(-10px)';
+                currentPage.style.transition = 'opacity 0.2s ease-in-out, transform 0.2s ease-in-out';
+                
+                setTimeout(() => {
+                    currentPage.style.display = 'none';
+                    currentPage.style.opacity = '1';
+                    currentPage.style.transform = 'translateY(0)';
+                    currentPage.style.transition = '';
+                }, 200);
+            }
+            
+            // Show and fade in target page
+            setTimeout(() => {
+                targetPage.style.display = 'block';
+                targetPage.style.opacity = '0';
+                targetPage.style.transform = 'translateY(10px)';
+                
+                // Force reflow
+                targetPage.offsetHeight;
+                
+                targetPage.style.transition = 'opacity 0.3s ease-in-out, transform 0.3s ease-in-out';
+                targetPage.style.opacity = '1';
+                targetPage.style.transform = 'translateY(0)';
+                
+                // Update URL without reload
+                const newUrl = pageName === 'home' ? '/' : '?page=' + pageName;
+                history.pushState({page: pageName}, '', newUrl);
+                
+                // Scroll to top
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                
+                setTimeout(() => {
+                    targetPage.style.transition = '';
+                    isNavigating = false;
+                }, 300);
+            }, currentPage ? 200 : 0);
+        }
+        
+        // Handle browser back/forward
+        window.addEventListener('popstate', function(e) {
+            const pageName = e.state?.page || 'home';
+            navigateToPage(pageName);
+        });
+        
+        // Set initial state
+        const initialPage = new URLSearchParams(window.location.search).get('page') || 'home';
+        history.replaceState({page: initialPage}, '', window.location.href);
+    });
+    </script>
 </body>
 </html>
