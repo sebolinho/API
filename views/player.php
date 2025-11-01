@@ -1,19 +1,36 @@
-<div class="flex flex-col items-center justify-center w-full" style="margin-top: 100px;">
+<?php
+require_once __DIR__ . '/../admin/Config.php';
+$config = Config::load();
+$config_modules = $config['modules'] ?? [];
+$enabled_ids = array_column($config_modules, 'id');
+
+// Default modules if not configured
+$all_modules = [
+    'movie' => 'Movie Player',
+    'series' => 'Series Player',
+    'tv' => 'TV Player'
+];
+
+// Use all if none configured, otherwise use only enabled
+$display_modules = empty($config_modules) ? $all_modules : array_intersect_key($all_modules, array_flip($enabled_ids));
+?>
+<div class="flex flex-col items-center justify-center w-full" style="margin-top: 120px;">
     <div class="flex max-w-[70rem] flex-col items-center w-full h-full min-h-screen gap-2 p-4">
         <main id="PlayerTester" class="flex max-w-[70rem] flex-col items-center w-full h-full min-h-screen gap-2 p-4 bg-gray-900 text-white">
             <div class="flex p-1 h-fit gap-2 items-center flex-nowrap overflow-x-scroll scrollbar-hide bg-black/20 rounded-full new">
-                <button id="tab-movie" class="tab-button group" data-selected="true">
+                <?php 
+                $first = true;
+                foreach ($display_modules as $id => $name): 
+                    $tab_id = ($id === 'series') ? 'tv' : ($id === 'tv' ? 'tvplayer' : $id);
+                ?>
+                <button id="tab-<?= $tab_id ?>" class="tab-button group"<?= $first ? ' data-selected="true"' : '' ?>>
                     <span class="cursor-pill"></span>
-                    <span class="relative z-10">Movie Player</span>
+                    <span class="relative z-10"><?= htmlspecialchars($name) ?></span>
                 </button>
-                <button id="tab-tv" class="tab-button group">
-                    <span class="cursor-pill"></span>
-                    <span class="relative z-10">Series Player</span>
-                </button>
-                <button id="tab-tvplayer" class="tab-button group">
-                    <span class="cursor-pill"></span>
-                    <span class="relative z-10">TV Player</span>
-                </button>
+                <?php 
+                $first = false;
+                endforeach; 
+                ?>
             </div>
 
             <div class="w-full py-3 px-1">
@@ -103,11 +120,12 @@
 
     .cursor-pill {
         position: absolute; inset: 0; z-index: 0; border-radius: 9999px;
-        background-color: #4f79a1;
+        background: <?= htmlspecialchars($navbar_selected_bg_dark) ?>;
         box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
         opacity: 0; transition: opacity 0.2s ease-in-out;
     }
     .tab-button[data-selected="true"] .cursor-pill { opacity: 1; }
+    .tab-button:hover:not([data-selected="true"]) { color: <?= htmlspecialchars($navbar_hover) ?>; }
 
     .tab-content {
         width: 100%; display: none; align-items: center; flex-direction: column;

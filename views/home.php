@@ -4,6 +4,13 @@ require_once __DIR__ . '/../admin/TMDB.php';
 
 $config = Config::load();
 
+// Load colors from config
+$colors = $config['colors'] ?? [];
+$navbar_hover = $colors['navbar_hover'] ?? 'rgb(147, 51, 234)';
+$navbar_selected_bg_dark = $colors['navbar_selected_bg_dark'] ?? 'linear-gradient(to right, rgb(168, 85, 247), rgb(147, 51, 234))';
+$text_primary = $colors['text_primary'] ?? 'rgb(255, 255, 255)';
+$text_secondary = $colors['text_secondary'] ?? 'rgba(255, 255, 255, 0.8)';
+
 // Get TMDB posters if enabled
 $posterImages = [];
 if ($config['tmdb']['enabled'] && !empty($config['tmdb']['api_key'])) {
@@ -43,22 +50,40 @@ function renderPosterColumns($posters, $startIndex, $count) {
         </a>
     </div>
     <nav class="flex-1 flex justify-center max-w-[45%] sm:max-w-none px-2">
-        <div class="flex items-center bg-white/98 dark:bg-gray-800/50 backdrop-blur-sm rounded-full p-1.5 w-full sm:w-auto border border-purple-100 dark:border-purple-900/50 shadow-lg shadow-purple-100/20 dark:shadow-purple-900/20" style="width: 100%; max-width: 328px;"><a class="flex-1 px-2.5 sm:px-4 py-1.5 rounded-full transition-all duration-200 relative flex items-center justify-center gap-1.5 sm:gap-2 text-white" href="https://www.videasy.net/">
-            <div class="absolute inset-0 bg-gradient-to-r from-purple-600 to-purple-579 dark:from-purple-500 dark:to-purple-400 rounded-full"
-            style="opacity:1"></div><span class="relative z-10"><svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true" class="w-5 h-5" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg></span>
-            <span
-            class="relative z-10 tracking-wide hidden lg:block text-sm font-medium"><?= htmlspecialchars($config['navigation']['welcome_text']) ?></span>
-                </a>
-                <a class="flex-1 px-2.5 sm:px-4 py-1.5 rounded-full transition-all duration-200 relative flex items-center justify-center gap-1.5 sm:gap-2 text-gray-600 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400" href="?page=player"><span class="relative z-10"><svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true" class="w-5 h-5" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></span>
-                    <span
-                    class="relative z-10 tracking-wide hidden lg:block text-sm font-medium"><?= htmlspecialchars($config['navigation']['player_text']) ?></span>
-                </a>
-                <a class="flex-1 px-2.5 sm:px-4 py-1.5 rounded-full transition-all duration-200 relative flex items-center justify-center gap-1.5 sm:gap-2 text-gray-600 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400" href="?page=docs"><span class="relative z-10"><svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true" class="w-5 h-5" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg></span>
-                    <span
-                    class="relative z-10 tracking-wide hidden lg:block text-sm font-medium"><?= htmlspecialchars($config['navigation']['docs_text']) ?></span>
-                </a>
+        <div class="flex items-center bg-white/98 dark:bg-gray-800/50 backdrop-blur-sm rounded-full p-1.5 w-full sm:w-auto border border-purple-100 dark:border-purple-900/50 shadow-lg shadow-purple-100/20 dark:shadow-purple-900/20" style="width: 100%; max-width: 328px;">
+            <a class="flex-1 px-2.5 sm:px-4 py-1.5 rounded-full transition-all duration-200 relative flex items-center justify-center gap-1.5 sm:gap-2 home-nav-link" href="?page=home" style="color: <?= $text_primary ?>">
+                <div class="absolute inset-0 rounded-full" style="opacity:1; background: <?= htmlspecialchars($navbar_selected_bg_dark) ?>"></div>
+                <span class="relative z-10">
+                    <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true" class="w-5 h-5" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                    </svg>
+                </span>
+                <span class="relative z-10 tracking-wide hidden lg:block text-sm font-medium"><?= htmlspecialchars($config['navigation']['welcome_text']) ?></span>
+            </a>
+            <a class="flex-1 px-2.5 sm:px-4 py-1.5 rounded-full transition-all duration-200 relative flex items-center justify-center gap-1.5 sm:gap-2 home-hover-link" href="?page=player" style="color: rgba(100, 116, 139, 1)">
+                <span class="relative z-10">
+                    <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true" class="w-5 h-5" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </span>
+                <span class="relative z-10 tracking-wide hidden lg:block text-sm font-medium"><?= htmlspecialchars($config['navigation']['player_text']) ?></span>
+            </a>
+            <a class="flex-1 px-2.5 sm:px-4 py-1.5 rounded-full transition-all duration-200 relative flex items-center justify-center gap-1.5 sm:gap-2 home-hover-link" href="?page=docs" style="color: rgba(100, 116, 139, 1)">
+                <span class="relative z-10">
+                    <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true" class="w-5 h-5" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                    </svg>
+                </span>
+                <span class="relative z-10 tracking-wide hidden lg:block text-sm font-medium"><?= htmlspecialchars($config['navigation']['docs_text']) ?></span>
+            </a>
         </div>
     </nav>
+<style>
+.home-hover-link:hover {
+    color: <?= $navbar_hover ?> !important;
+}
+</style>
     <div class="flex items-center min-w-[90px] sm:min-w-[120px] justify-end">
         <div class="flex items-center bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-full border border-purple-100 dark:border-purple-900/50 shadow-lg shadow-purple-100/20 dark:shadow-purple-900/20 w-full h-[34px] sm:h-[38px]">
             <div class="flex items-center justify-between w-full px-3 h-full">
