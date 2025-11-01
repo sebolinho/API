@@ -261,8 +261,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-            // Fetch via proxy
-            const response = await fetch(`/api/proxy.php?url=${encodeURIComponent(url)}`);
+            // Fetch via proxy (relative path from current location)
+            const response = await fetch(`api/proxy.php?url=${encodeURIComponent(url)}`);
             
             if (!response.ok) {
                 throw new Error(`Erro na API Superflix: ${response.statusText}`);
@@ -367,8 +367,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const tmdbUrl = `https://api.themoviedb.org/3/${type}/${id}?language=${TMDB_LANGUAGE}`;
 
         try {
-            // Fetch via proxy (API key injected server-side)
-            const response = await fetch(`/api/proxy.php?url=${encodeURIComponent(tmdbUrl)}`);
+            // Fetch via proxy (API key injected server-side, relative path)
+            const response = await fetch(`api/proxy.php?url=${encodeURIComponent(tmdbUrl)}`);
             
             if (!response.ok) {
                 console.warn(`Não foi possível buscar o item ${type}/${id}. Status: ${response.status}`);
