@@ -147,6 +147,12 @@ if (isset($_POST['save']) && isset($_SESSION['admin_logged_in'])) {
         'player_embed_base' => $_POST['player_embed_base'] ?? 'https://vidlink.pro/movie/94997'
     ];
     
+    // Update catalog settings
+    $config['catalog'] = [
+        'grid_columns' => intval($_POST['catalog_grid_columns'] ?? 8),
+        'items_per_page' => intval($_POST['catalog_items_per_page'] ?? 64)
+    ];
+    
     // Preserve TV channels and modules (handled separately)
     if (!isset($config['tv_channels'])) {
         $config['tv_channels'] = [];
@@ -627,6 +633,7 @@ $config = Config::load();
             <button class="tab-btn" onclick="showTab('colors')">🎨 Colors</button>
             <button class="tab-btn" onclick="showTab('tmdb')">🎬 TMDB API</button>
             <button class="tab-btn" onclick="showTab('settings')">⚙️ Settings</button>
+            <button class="tab-btn" onclick="showTab('catalog')">📚 Catalog</button>
             <button class="tab-btn" onclick="showTab('modules')">🎛️ Modules</button>
             <button class="tab-btn" onclick="showTab('tvchannels')">📺 TV Channels</button>
             <?php if (isset($_SESSION['admin_role']) && isset($_SESSION['admin_role']) && $_SESSION['admin_role'] === 'administrator'): ?>
@@ -974,6 +981,34 @@ $config = Config::load();
                         <label>Player Embed Base URL</label>
                         <input type="url" name="player_embed_base" value="<?= htmlspecialchars($config['settings']['player_embed_base'] ?? 'https://vidlink.pro/movie/94997') ?>" placeholder="https://vidlink.pro/movie/94997">
                         <small style="color: #888;">Default embed URL for the player page</small>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Catalog Tab -->
+            <div id="catalog" class="tab-content">
+                <div class="form-section">
+                    <h3>Catalog Display Settings</h3>
+                    <p style="color: #666; margin-bottom: 1.5rem;">
+                        Configure how movies and series are displayed in the Content catalog page.
+                    </p>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label>Grid Columns</label>
+                            <input type="number" name="catalog_grid_columns" value="<?= htmlspecialchars($config['catalog']['grid_columns'] ?? 8) ?>" min="1" max="12" placeholder="8">
+                            <small style="color: #888;">Number of columns in the grid (1-12). Default: 8</small>
+                        </div>
+                        <div class="form-group">
+                            <label>Items Per Page</label>
+                            <input type="number" name="catalog_items_per_page" value="<?= htmlspecialchars($config['catalog']['items_per_page'] ?? 64) ?>" min="12" max="200" step="4" placeholder="64">
+                            <small style="color: #888;">Total items per page. Default: 64 (8×8 grid)</small>
+                        </div>
+                    </div>
+                    <div style="margin-top: 1.5rem; padding: 1rem; background: #e3f2fd; border-radius: 5px; border-left: 4px solid #2196f3;">
+                        <p style="margin: 0; color: #1976d2;"><strong>💡 Tip:</strong> For best results, set Items Per Page to Grid Columns × desired number of rows. Example: 8 columns × 8 rows = 64 items per page.</p>
+                    </div>
+                    <div style="margin-top: 1rem; padding: 1rem; background: #fff3cd; border-radius: 5px; border-left: 4px solid #ffc107;">
+                        <p style="margin: 0; color: #856404;"><strong>⚠️ Note:</strong> Changes take effect immediately on the Content page. Larger values may affect loading performance.</p>
                     </div>
                 </div>
             </div>
