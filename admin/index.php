@@ -147,8 +147,61 @@ if (isset($_POST['save']) && isset($_SESSION['admin_logged_in'])) {
         'player_embed_base' => $_POST['player_embed_base'] ?? 'https://vidlink.pro/movie/94997'
     ];
     
+    // Preserve TV channels and modules (handled separately)
+    if (!isset($config['tv_channels'])) {
+        $config['tv_channels'] = [];
+    }
+    if (!isset($config['modules'])) {
+        $config['modules'] = [];
+    }
+    
     Config::save($config);
     $success = 'Settings saved successfully!';
+}
+
+// Handle TV channel management
+if (isset($_SESSION['admin_logged_in'])) {
+    $config = Config::load();
+    
+    // Add channel
+    if (isset($_POST['add_channel'])) {
+        $channel_name = $_POST['channel_name'] ?? '';
+        $channel_slug = $_POST['channel_slug'] ?? '';
+        $channel_url = $_POST['channel_url'] ?? '';
+        
+        if (!empty($channel_name) && !empty($channel_slug)) {
+            if (!isset($config['tv_channels'])) {
+                $config['tv_channels'] = [];
+            }
+            
+            $config['tv_channels'][] = [
+                'id' => uniqid(),
+                'name' => $channel_name,
+                'slug' => $channel_slug,
+                'url' => $channel_url
+            ];
+            
+            Config::save($config);
+            $channel_success = 'Channel added successfully!';
+        } else {
+            $channel_error = 'Channel name and slug are required!';
+        }
+    }
+    
+    // Delete channel
+    if (isset($_POST['delete_channel'])) {
+        $channel_id = $_POST['channel_id'] ?? '';
+        
+        if (!empty($channel_id) && isset($config['tv_channels'])) {
+            $config['tv_channels'] = array_filter($config['tv_channels'], function($ch) use ($channel_id) {
+                return $ch['id'] !== $channel_id;
+            });
+            $config['tv_channels'] = array_values($config['tv_channels']); // Re-index array
+            
+            Config::save($config);
+            $channel_success = 'Channel deleted successfully!';
+        }
+    }
 }
 
 // Check if logged in
@@ -467,6 +520,7 @@ $config = Config::load();
             <button class="tab-btn" onclick="showTab('colors')">🎨 Colors</button>
             <button class="tab-btn" onclick="showTab('tmdb')">🎬 TMDB API</button>
             <button class="tab-btn" onclick="showTab('settings')">⚙️ Settings</button>
+            <button class="tab-btn" onclick="showTab('tvchannels')">📺 TV Channels</button>
             <?php if (isset($_SESSION['admin_role']) && $_SESSION['admin_role'] === 'administrator'): ?>
             <button class="tab-btn" onclick="showTab('users')">👥 Users</button>
             <?php endif; ?>
@@ -810,6 +864,75 @@ $config = Config::load();
             
             <button type="submit" name="save" class="save-btn">💾 Save All Changes</button>
         </form>
+        
+        <!-- TV Channels Tab (Separate form) -->
+        <div id="tvchannels" class="tab-content" style="background: white; padding: 2rem; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); display: none;">
+            <div class="form-section">
+                <h3>TV Channel Management</h3>
+                <p style="color: #888; margin-bottom: 1.5rem;">Manage TV channels for the TV Player. Channel URLs will be in the format: https://meulink/tv/channel-slug</p>
+                
+                <?php if (isset($channel_success)): ?>
+                    <div class="success"><?= htmlspecialchars($channel_success) ?></div>
+                <?php endif; ?>
+                <?php if (isset($channel_error)): ?>
+                    <div class="error" style="background: #fee; color: #c33; padding: 0.75rem; border-radius: 5px; margin-bottom: 1rem;"><?= htmlspecialchars($channel_error) ?></div>
+                <?php endif; ?>
+                
+                <h4 style="margin: 1.5rem 0 1rem; color: #764ba2;">Add New Channel</h4>
+                <form method="POST" style="background: #f9f9f9; padding: 1.5rem; border-radius: 5px; margin-bottom: 2rem;">
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label>Channel Name</label>
+                            <input type="text" name="channel_name" required placeholder="e.g., ESPN">
+                        </div>
+                        <div class="form-group">
+                            <label>Channel Slug</label>
+                            <input type="text" name="channel_slug" required placeholder="e.g., espn (lowercase, no spaces)">
+                            <small style="color: #888;">This will be used in the URL</small>
+                        </div>
+                        <div class="form-group" style="grid-column: 1 / -1;">
+                            <label>Channel URL (Optional)</label>
+                            <input type="url" name="channel_url" placeholder="https://example.com/stream/espn">
+                            <small style="color: #888;">The actual streaming URL for this channel</small>
+                        </div>
+                    </div>
+                    <button type="submit" name="add_channel" style="background: #28a745; color: white; padding: 0.75rem 1.5rem; border: none; border-radius: 5px; font-weight: 600; cursor: pointer; margin-top: 1rem;">➕ Add Channel</button>
+                </form>
+                
+                <h4 style="margin: 1.5rem 0 1rem; color: #764ba2;">Existing Channels</h4>
+                <?php 
+                $channels = $config['tv_channels'] ?? [];
+                if (empty($channels)): ?>
+                    <p style="color: #888; padding: 2rem; text-align: center; background: #f9f9f9; border-radius: 5px;">No channels added yet. Add your first channel above!</p>
+                <?php else: ?>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="background: #f0f0f0; text-align: left;">
+                            <th style="padding: 1rem; border-bottom: 2px solid #ddd;">Channel Name</th>
+                            <th style="padding: 1rem; border-bottom: 2px solid #ddd;">Slug</th>
+                            <th style="padding: 1rem; border-bottom: 2px solid #ddd;">Preview URL</th>
+                            <th style="padding: 1rem; border-bottom: 2px solid #ddd;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($channels as $channel): ?>
+                        <tr style="border-bottom: 1px solid #eee;">
+                            <td style="padding: 1rem; font-weight: 500;"><?= htmlspecialchars($channel['name']) ?></td>
+                            <td style="padding: 1rem; font-family: monospace; color: #667eea;"><?= htmlspecialchars($channel['slug']) ?></td>
+                            <td style="padding: 1rem; font-size: 0.875rem; color: #888;">https://meulink/tv/<?= htmlspecialchars($channel['slug']) ?></td>
+                            <td style="padding: 1rem;">
+                                <form method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this channel?');">
+                                    <input type="hidden" name="channel_id" value="<?= htmlspecialchars($channel['id']) ?>">
+                                    <button type="submit" name="delete_channel" style="background: #dc3545; color: white; padding: 0.5rem 1rem; border: none; border-radius: 5px; cursor: pointer;">🗑️ Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+                <?php endif; ?>
+            </div>
+        </div>
         
         <!-- Users Tab (Separate form) -->
         <?php if (isset($_SESSION['admin_role']) && $_SESSION['admin_role'] === 'administrator'): ?>

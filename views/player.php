@@ -10,9 +10,9 @@
                     <span class="cursor-pill"></span>
                     <span class="relative z-10">Series Player</span>
                 </button>
-                <button id="tab-anime" class="tab-button group">
+                <button id="tab-tvplayer" class="tab-button group">
                     <span class="cursor-pill"></span>
-                    <span class="relative z-10">Anime Player</span>
+                    <span class="relative z-10">TV Player</span>
                 </button>
             </div>
 
@@ -41,24 +41,25 @@
                     </div>
                 </div>
 
-                <div id="content-anime" class="tab-content">
+                <div id="content-tvplayer" class="tab-content">
                     <div class="fields-wrapper">
                         <div class="input-container flex-grow">
-                            <input id="anime-id" type="text" class="input-field" value="40748" placeholder=" ">
-                            <label for="anime-id" class="input-label">Mal Id</label>
+                            <label for="tv-channel-select" class="input-label" style="position: relative; left: 0; top: 0; transform: none; margin-bottom: 0.5rem; display: block;">Select Channel</label>
+                            <select id="tv-channel-select" class="input-field" style="padding: 0.75rem; background: #2a2a2a; border: 1px solid #444; color: white; border-radius: 8px; width: 100%; cursor: pointer;">
+                                <?php
+                                require_once __DIR__ . '/../admin/Config.php';
+                                $config = Config::load();
+                                $channels = $config['tv_channels'] ?? [];
+                                if (empty($channels)) {
+                                    echo '<option value="">No channels available</option>';
+                                } else {
+                                    foreach ($channels as $channel) {
+                                        echo '<option value="' . htmlspecialchars($channel['slug']) . '">' . htmlspecialchars($channel['name']) . '</option>';
+                                    }
+                                }
+                                ?>
+                            </select>
                         </div>
-                        <div class="input-container small-input">
-                            <input id="anime-episode" type="number" class="input-field" value="1" placeholder=" ">
-                            <label for="anime-episode" class="input-label">E</label>
-                        </div>
-                        <button id="anime-dub" class="dub-button" data-active="false">DUB</button>
-                        <label for="anime-fallback" class="flex items-center gap-2 cursor-pointer">
-                            <div class="relative">
-                                <input type="checkbox" id="anime-fallback" class="sr-only peer">
-                                <div class="w-10 h-6 bg-gray-600 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                            </div>
-                            <span class="text-sm">Fallback</span>
-                        </label>
                     </div>
                 </div>
 
@@ -173,10 +174,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const tvTmdb = document.getElementById('tv-tmdb');
     const tvSeason = document.getElementById('tv-season');
     const tvEpisode = document.getElementById('tv-episode');
-    const animeId = document.getElementById('anime-id');
-    const animeEpisode = document.getElementById('anime-episode');
-    const animeDub = document.getElementById('anime-dub');
-    const animeFallback = document.getElementById('anime-fallback');
+    const tvChannelSelect = document.getElementById('tv-channel-select');
     
     const videoUrl = document.getElementById('video-url');
     const videoIframe = document.getElementById('video-iframe');
@@ -215,12 +213,13 @@ document.addEventListener('DOMContentLoaded', function() {
             const season = tvSeason.value || '1';
             const episode = tvEpisode.value || '1';
             url = `https://vidlink.pro/tv/${tmdbId}/${season}/${episode}`;
-        } else if (activeTab === 'tab-anime') {
-            const id = animeId.value || '40748';
-            const episode = animeEpisode.value || '1';
-            const dubParam = animeDub.dataset.active === 'true' ? '/dub' : '';
-            const fallbackParam = animeFallback.checked ? '?fallback=true' : '';
-            url = `https://vidlink.pro/anime/${id}/${episode}${dubParam}${fallbackParam}`;
+        } else if (activeTab === 'tab-tvplayer') {
+            const channelSlug = tvChannelSelect.value;
+            if (channelSlug) {
+                url = `https://meulink/tv/${channelSlug}`;
+            } else {
+                url = 'https://meulink/tv/no-channel-selected';
+            }
         }
 
         videoUrl.textContent = url;
@@ -231,15 +230,13 @@ document.addEventListener('DOMContentLoaded', function() {
         button.addEventListener('click', () => switchTab(button));
     });
 
-    [movieTmdb, tvTmdb, tvSeason, tvEpisode, animeId, animeEpisode, animeFallback].forEach(input => {
-        input.addEventListener('input', updateUrl);
+    [movieTmdb, tvTmdb, tvSeason, tvEpisode].forEach(input => {
+        if (input) input.addEventListener('input', updateUrl);
     });
     
-    animeDub.addEventListener('click', function() {
-        const isActive = animeDub.dataset.active === 'true';
-        animeDub.dataset.active = !isActive;
-        updateUrl();
-    });
+    if (tvChannelSelect) {
+        tvChannelSelect.addEventListener('change', updateUrl);
+    }
 
     copyButton.addEventListener('click', function() {
         navigator.clipboard.writeText(videoUrl.textContent.trim())
