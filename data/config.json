@@ -1,0 +1,97 @@
+{
+  "site": {
+    "title": "VidLink - Biggest and Fastest Streaming API",
+    "logo_text": "MEGAEMBED",
+    "headline": "MEGAEMBED",
+    "subheadline": "Biggest and Fastest Streaming API",
+    "get_started_text": "Get Started >",
+    "test_player_text": "Test the Player",
+    "movies_count": "100K+",
+    "shows_count": "70K+",
+    "anime_count": "5K+",
+    "estimate_text": "These numbers are an estimate from the 13+ sources we have",
+    "copyright": "© 2024 VidLink. All rights reserved"
+  },
+  "navigation": {
+    "welcome_text": "Welcome",
+    "player_text": "Player",
+    "docs_text": "Docs"
+  },
+  "social": {
+    "telegram_url": "https://t.me/+vidlinkpro",
+    "telegram_button_text": "Entre No Telegram",
+    "discord_url": "https://discord.gg/vidlink"
+  },
+  "features": {
+    "easy_title": "Easy to use",
+    "easy_desc": "Intuitive and easy to use. Just copy the link and embed it into your website",
+    "library_title": "Huge Library",
+    "library_desc": "With movies and shows scraped from multiple websites, we have it all!",
+    "custom_title": "Customizable",
+    "custom_desc": "You can customize the player to your needs, using only query parameters",
+    "update_title": "Auto Update",
+    "update_desc": "Content added every day, updated automatically",
+    "quality_title": "Highest Quality",
+    "quality_desc": "Latest available quality and the fastest"
+  },
+  "colors": {
+    "navbar_bg": "rgba(255, 255, 255, 0.5)",
+    "navbar_bg_dark": "rgba(31, 41, 55, 0.5)",
+    "navbar_hover": "rgb(147, 51, 234)",
+    "navbar_selected_bg": "linear-gradient(to right, rgb(147, 51, 234), rgb(126, 34, 206))",
+    "navbar_selected_bg_dark": "linear-gradient(to right, rgb(168, 85, 247), rgb(147, 51, 234))",
+    "text_primary": "rgb(255, 255, 255)",
+    "text_secondary": "rgba(255, 255, 255, 0.8)",
+    "button_telegram_bg": "rgba(37, 99, 235, 0.5)",
+    "button_telegram2_bg": "rgba(79, 70, 229, 0.2)"
+  },
+  "tmdb": {
+    "api_key": "194b4bfd824321aecea17681a399d39e",
+    "enabled": true,
+    "language": "pt-BR"
+  },
+  "settings": {
+    "favicon": "complete/resources/image_1.ico",
+    "player_embed_base": "https://vidlink.pro/movie/94997"
+  },
+  "tv_channels": [
+    {
+      "id": "1",
+      "name": "Sample Channel 1",
+      "slug": "sample-channel-1",
+      "url": "https://example.com/tv/sample-channel-1"
+    },
+    {
+      "id": "2",
+      "name": "Sample Channel 2",
+      "slug": "sample-channel-2",
+      "url": "https://example.com/tv/sample-channel-2"
+    }
+  ],
+  "modules": [
+    {
+      "id": "movie",
+      "name": "Movie Player",
+      "enabled": true,
+      "url_format": "movie",
+      "icon": "play-circle",
+      "order": 1
+    },
+    {
+      "id": "series",
+      "name": "Series Player",
+      "enabled": true,
+      "url_format": "tv",
+      "icon": "tv",
+      "order": 2
+    },
+    {
+      "id": "tv",
+      "name": "TV Player",
+      "enabled": true,
+      "url_format": "tv",
+      "icon": "signal",
+      "order": 3
+    }
+  ]
+}
