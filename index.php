@@ -51,15 +51,26 @@ $siteTitle = $config['site']['title'] ?? 'VidLink - Biggest and Fastest Streamin
         </div>
     </div>
     
+    <style>
+    .spa-page {
+        animation: fadeIn 0.3s ease-in-out;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    </style>
+    
     <script>
-    // Simple SPA navigation
+    // Simple SPA navigation with smooth transitions
     document.addEventListener('DOMContentLoaded', function() {
         const pages = document.querySelectorAll('.spa-page');
+        let isNavigating = false;
         
         // Handle all navigation links
         document.addEventListener('click', function(e) {
             const link = e.target.closest('a[href^="?page="]');
-            if (link) {
+            if (link && !isNavigating) {
                 e.preventDefault();
                 const url = new URL(link.href);
                 const pageName = url.searchParams.get('page') || 'home';
@@ -67,28 +78,65 @@ $siteTitle = $config['site']['title'] ?? 'VidLink - Biggest and Fastest Streamin
             }
         });
         
-        // Navigate to a specific page
+        // Navigate to a specific page with smooth transition
         function navigateToPage(pageName) {
-            // Hide all pages
-            pages.forEach(page => page.style.display = 'none');
+            if (isNavigating) return;
+            isNavigating = true;
             
-            // Show target page
+            // Get current and target pages
+            const currentPage = document.querySelector('.spa-page[style*="display: block"]');
             const targetPage = document.getElementById('page-' + pageName);
-            if (targetPage) {
+            
+            if (!targetPage || currentPage === targetPage) {
+                isNavigating = false;
+                return;
+            }
+            
+            // Fade out current page
+            if (currentPage) {
+                currentPage.style.opacity = '0';
+                currentPage.style.transform = 'translateY(-10px)';
+                currentPage.style.transition = 'opacity 0.2s ease-in-out, transform 0.2s ease-in-out';
+                
+                setTimeout(() => {
+                    currentPage.style.display = 'none';
+                    currentPage.style.opacity = '1';
+                    currentPage.style.transform = 'translateY(0)';
+                    currentPage.style.transition = '';
+                }, 200);
+            }
+            
+            // Show and fade in target page
+            setTimeout(() => {
                 targetPage.style.display = 'block';
+                targetPage.style.opacity = '0';
+                targetPage.style.transform = 'translateY(10px)';
+                
+                // Force reflow
+                targetPage.offsetHeight;
+                
+                targetPage.style.transition = 'opacity 0.3s ease-in-out, transform 0.3s ease-in-out';
+                targetPage.style.opacity = '1';
+                targetPage.style.transform = 'translateY(0)';
                 
                 // Update URL without reload
                 const newUrl = pageName === 'home' ? '/' : '?page=' + pageName;
                 history.pushState({page: pageName}, '', newUrl);
-            }
+                
+                // Scroll to top
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                
+                setTimeout(() => {
+                    targetPage.style.transition = '';
+                    isNavigating = false;
+                }, 300);
+            }, currentPage ? 200 : 0);
         }
         
         // Handle browser back/forward
         window.addEventListener('popstate', function(e) {
             const pageName = e.state?.page || 'home';
-            pages.forEach(page => page.style.display = 'none');
-            const targetPage = document.getElementById('page-' + pageName);
-            if (targetPage) targetPage.style.display = 'block';
+            navigateToPage(pageName);
         });
         
         // Set initial state

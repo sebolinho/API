@@ -51,7 +51,7 @@ function renderPosterColumns($posters, $startIndex, $count) {
     </div>
     <nav class="flex-1 flex justify-center max-w-[45%] sm:max-w-none px-2">
         <div class="flex items-center bg-white/98 dark:bg-gray-800/50 backdrop-blur-sm rounded-full p-1.5 w-full sm:w-auto border border-purple-100 dark:border-purple-900/50 shadow-lg shadow-purple-100/20 dark:shadow-purple-900/20" style="width: 100%; max-width: 328px;">
-            <a class="flex-1 px-2.5 sm:px-4 py-1.5 rounded-full transition-all duration-200 relative flex items-center justify-center gap-1.5 sm:gap-2 home-nav-link" href="https://www.videasy.net/" style="color: <?= $text_primary ?>">
+            <a class="flex-1 px-2.5 sm:px-4 py-1.5 rounded-full transition-all duration-200 relative flex items-center justify-center gap-1.5 sm:gap-2 home-nav-link" href="?page=home" style="color: <?= $text_primary ?>">
                 <div class="absolute inset-0 rounded-full" style="opacity:1; background: <?= htmlspecialchars($navbar_selected_bg_dark) ?>"></div>
                 <span class="relative z-10">
                     <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true" class="w-5 h-5" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
