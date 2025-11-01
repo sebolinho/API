@@ -76,6 +76,7 @@ curl_close($ch);
 if ($httpCode == 200 && $response) {
     echo $response;
 } else {
-    http_response_code($httpCode);
-    echo json_encode(['error' => 'Failed to fetch data from SuperflixAPI']);
+    http_response_code($httpCode ?: 500);
+    $source = $isTmdbRequest ? 'TMDB API' : 'external API';
+    echo json_encode(['error' => "Failed to fetch data from {$source}", 'http_code' => $httpCode]);
 }
