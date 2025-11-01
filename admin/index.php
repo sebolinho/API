@@ -26,7 +26,7 @@ if (isset($_GET['logout'])) {
 }
 
 // Handle user management actions
-if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_role'] === 'administrator') {
+if (isset($_SESSION['admin_logged_in']) && isset($_SESSION['admin_role']) && $_SESSION['admin_role'] === 'administrator') {
     // Create user
     if (isset($_POST['create_user'])) {
         $username = $_POST['new_username'] ?? '';
@@ -201,6 +201,36 @@ if (isset($_SESSION['admin_logged_in'])) {
             Config::save($config);
             $channel_success = 'Channel deleted successfully!';
         }
+    }
+    
+    // Toggle module
+    if (isset($_POST['toggle_module'])) {
+        $module_id = $_POST['module_id'] ?? '';
+        $module_name = $_POST['module_name'] ?? '';
+        $enabled = $_POST['module_enabled'] === '1';
+        
+        if (!isset($config['modules'])) {
+            $config['modules'] = [];
+        }
+        
+        // Remove existing entry for this module
+        $config['modules'] = array_filter($config['modules'], function($m) use ($module_id) {
+            return $m['id'] !== $module_id;
+        });
+        
+        // Add back if enabled
+        if ($enabled) {
+            $config['modules'][] = [
+                'id' => $module_id,
+                'name' => $module_name,
+                'enabled' => true
+            ];
+        }
+        
+        $config['modules'] = array_values($config['modules']);
+        Config::save($config);
+        header('Location: index.php?tab=modules');
+        exit;
     }
 }
 
@@ -494,6 +524,29 @@ $config = Config::load();
             flex: 2;
             min-width: 150px;
         }
+        
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            #colors > div {
+                grid-template-columns: 1fr !important;
+            }
+            #colors > div > div:last-child {
+                position: relative !important;
+                top: 0 !important;
+            }
+        }
+        @media (max-width: 768px) {
+            .container { padding: 0 1rem; }
+            .tabs { gap: 0.25rem; }
+            .tab-btn { padding: 0.5rem 1rem; font-size: 0.875rem; }
+            .tab-content { padding: 1rem; }
+            .grid-2 { grid-template-columns: 1fr; }
+            .color-picker-group { flex-wrap: wrap; }
+        }
+        
+        /* Add spacing above items */
+        .form-section { margin-top: 20px; }
+        .form-section:first-child { margin-top: 0; }
     </style>
 </head>
 <body>
@@ -520,8 +573,9 @@ $config = Config::load();
             <button class="tab-btn" onclick="showTab('colors')">🎨 Colors</button>
             <button class="tab-btn" onclick="showTab('tmdb')">🎬 TMDB API</button>
             <button class="tab-btn" onclick="showTab('settings')">⚙️ Settings</button>
+            <button class="tab-btn" onclick="showTab('modules')">🎛️ Modules</button>
             <button class="tab-btn" onclick="showTab('tvchannels')">📺 TV Channels</button>
-            <?php if (isset($_SESSION['admin_role']) && $_SESSION['admin_role'] === 'administrator'): ?>
+            <?php if (isset($_SESSION['admin_role']) && isset($_SESSION['admin_role']) && $_SESSION['admin_role'] === 'administrator'): ?>
             <button class="tab-btn" onclick="showTab('users')">👥 Users</button>
             <?php endif; ?>
         </div>
@@ -701,23 +755,9 @@ $config = Config::load();
             
             <!-- Colors Tab -->
             <div id="colors" class="tab-content">
-                <!-- Live Preview Section -->
-                <div class="form-section">
-                    <h3>🎨 Live Preview</h3>
-                    <p style="color: #888; margin-bottom: 1rem;">See how your navbar will look with current color settings (Dark Mode)</p>
-                    <div id="navbar-preview" style="background: #111; padding: 2rem; border-radius: 10px; margin-bottom: 1.5rem;">
-                        <div style="display: flex; align-items: center; justify-content: space-between; max-width: 800px; margin: 0 auto;">
-                            <div style="background: rgba(255,255,255,0.1); padding: 0.5rem 1rem; border-radius: 999px;">
-                                <span style="color: white; font-weight: 700;">LOGO</span>
-                            </div>
-                            <div id="preview-nav" style="display: flex; gap: 0.5rem; background: rgba(255,255,255,0.05); padding: 0.5rem; border-radius: 999px;">
-                                <button id="preview-btn-1" style="padding: 0.5rem 1rem; border-radius: 999px; border: none; cursor: pointer; color: white; background: rgba(147, 51, 234, 1); transition: all 0.3s;">Welcome</button>
-                                <button id="preview-btn-2" style="padding: 0.5rem 1rem; border-radius: 999px; border: none; cursor: pointer; color: rgba(255,255,255,0.7); background: transparent; transition: all 0.3s;">Player</button>
-                                <button id="preview-btn-3" style="padding: 0.5rem 1rem; border-radius: 999px; border: none; cursor: pointer; color: rgba(255,255,255,0.7); background: transparent; transition: all 0.3s;">Docs</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <div style="display: grid; grid-template-columns: 1fr 400px; gap: 2rem; align-items: start;">
+                    <!-- Color Controls (Left) -->
+                    <div style="min-width: 0;">
                 
                 <div class="form-section">
                     <h3>Navigation Bar Colors</h3>
@@ -807,6 +847,28 @@ $config = Config::load();
                         </div>
                     </div>
                 </div>
+                    </div>
+                    
+                    <!-- Live Preview (Right - Sticky) -->
+                    <div style="position: sticky; top: 2rem; height: fit-content;">
+                        <div class="form-section">
+                            <h3>🎨 Live Preview</h3>
+                            <p style="color: #888; margin-bottom: 1rem; font-size: 0.875rem;">Preview updates in real-time</p>
+                            <div id="navbar-preview" style="background: #111; padding: 1.5rem; border-radius: 10px;">
+                                <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+                                    <div style="background: rgba(255,255,255,0.1); padding: 0.5rem 1rem; border-radius: 999px;">
+                                        <span style="color: white; font-weight: 700; font-size: 0.875rem;">LOGO</span>
+                                    </div>
+                                    <div id="preview-nav" style="display: flex; gap: 0.5rem; background: rgba(255,255,255,0.05); padding: 0.5rem; border-radius: 999px; flex-wrap: wrap;">
+                                        <button id="preview-btn-1" style="padding: 0.5rem 1rem; border-radius: 999px; border: none; cursor: pointer; color: white; background: rgba(147, 51, 234, 1); transition: all 0.3s; font-size: 0.875rem;">Welcome</button>
+                                        <button id="preview-btn-2" style="padding: 0.5rem 1rem; border-radius: 999px; border: none; cursor: pointer; color: rgba(255,255,255,0.7); background: transparent; transition: all 0.3s; font-size: 0.875rem;">Player</button>
+                                        <button id="preview-btn-3" style="padding: 0.5rem 1rem; border-radius: 999px; border: none; cursor: pointer; color: rgba(255,255,255,0.7); background: transparent; transition: all 0.3s; font-size: 0.875rem;">Docs</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
             
             <!-- TMDB Tab -->
@@ -864,6 +926,52 @@ $config = Config::load();
             
             <button type="submit" name="save" class="save-btn">💾 Save All Changes</button>
         </form>
+        
+        <!-- Modules Tab (Separate) -->
+        <div id="modules" class="tab-content" style="background: white; padding: 2rem; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); display: none;">
+            <div class="form-section">
+                <h3>Player Modules Management</h3>
+                <p style="color: #888; margin-bottom: 1.5rem;">Enable or disable player modules. Disabled modules won't appear in the player page.</p>
+                
+                <div style="display: grid; gap: 1rem;">
+                    <?php
+                    $modules = [
+                        ['id' => 'movie', 'name' => 'Movie Player', 'icon' => '🎬'],
+                        ['id' => 'series', 'name' => 'Series Player', 'icon' => '📺'],
+                        ['id' => 'tv', 'name' => 'TV Player', 'icon' => '📡']
+                    ];
+                    
+                    $config_modules = $config['modules'] ?? [];
+                    $enabled_modules = array_column($config_modules, 'id');
+                    
+                    foreach ($modules as $module):
+                        $is_enabled = empty($config_modules) || in_array($module['id'], $enabled_modules);
+                    ?>
+                    <div style="background: #f9f9f9; padding: 1.5rem; border-radius: 10px; display: flex; align-items: center; justify-content: space-between;">
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <span style="font-size: 2rem;"><?= $module['icon'] ?></span>
+                            <div>
+                                <h4 style="margin: 0; color: #333;"><?= $module['name'] ?></h4>
+                                <p style="margin: 0.25rem 0 0; color: #888; font-size: 0.875rem;">ID: <?= $module['id'] ?></p>
+                            </div>
+                        </div>
+                        <form method="POST" style="margin: 0;">
+                            <input type="hidden" name="module_id" value="<?= $module['id'] ?>">
+                            <input type="hidden" name="module_name" value="<?= $module['name'] ?>">
+                            <input type="hidden" name="module_enabled" value="<?= $is_enabled ? '0' : '1' ?>">
+                            <button type="submit" name="toggle_module" style="padding: 0.5rem 1.5rem; border-radius: 5px; border: none; cursor: pointer; font-weight: 600; transition: all 0.3s; <?= $is_enabled ? 'background: #28a745; color: white;' : 'background: #dc3545; color: white;' ?>">
+                                <?= $is_enabled ? '✓ Enabled' : '✗ Disabled' ?>
+                            </button>
+                        </form>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+                
+                <div style="margin-top: 2rem; padding: 1rem; background: #e3f2fd; border-radius: 5px; border-left: 4px solid #2196f3;">
+                    <p style="margin: 0; color: #1976d2;"><strong>Note:</strong> Changes to modules will affect the player page navigation. Refresh the player page to see updates.</p>
+                </div>
+            </div>
+        </div>
         
         <!-- TV Channels Tab (Separate form) -->
         <div id="tvchannels" class="tab-content" style="background: white; padding: 2rem; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); display: none;">
