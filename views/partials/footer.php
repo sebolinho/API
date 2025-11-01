@@ -1,7 +1,14 @@
+<?php
+require_once __DIR__ . '/../../admin/Config.php';
+$footer_config = Config::load();
+$telegram_url = $footer_config['social']['telegram_url'] ?? 'https://t.me/+vidlinkpro';
+$telegram_text = $footer_config['social']['telegram_button_text'] ?? 'Entre No Telegram';
+$discord_url = $footer_config['social']['discord_url'] ?? '';
+?>
 <div class="fixed flex items-center justify-center w-full gap-2 bottom-4">
     <button class="relative light-sweep px-6 py-2 font-medium backdrop-blur-xl transition-[box-shadow] duration-300 ease-in-out hover:shadow dark:bg-[radial-gradient(circle_at_50%_0%,hsl(var(--primary)/10%)_0%,transparent_60%)] dark:hover:shadow-[0_0_20px_hsl(var(--primary)/10%)] rounded-full bg-blue-600/50" tabindex="0" style="--x:-100%;will-change:auto;transform:none">
         <span class="relative items-center h-full w-full text-sm uppercase flex gap-2 tracking-wide text-[rgb(0,0,0,65%)] dark:font-light dark:text-[rgb(255,255,255,90%)]" style="mask-image:linear-gradient(-75deg,hsl(var(--primary)) calc(var(--x) + 20%),transparent calc(var(--x) + 30%),hsl(var(--primary)) calc(var(--x) + 100%))">
-            <a href="https://t.me/+vidlinkpro" target="_blank" rel="noreferrer">
+            <a href="<?= htmlspecialchars($telegram_url) ?>" target="_blank" rel="noreferrer">
                 <img src="complete/resources/image_12.webp" width="25" height="25" alt="telegram icon">
             </a>
         </span>
@@ -9,8 +16,8 @@
     </button>
     <button class="relative light-sweep px-6 py-2 font-medium backdrop-blur-xl transition-[box-shadow] duration-300 ease-in-out hover:shadow dark:bg-[radial-gradient(circle_at_50%_0%,hsl(var(--primary)/10%)_0%,transparent_60%)] dark:hover:shadow-[0_0_20px_hsl(var(--primary)/10%)] rounded-full bg-indigo-600/20" tabindex="0" style="--x:-100%;will-change:auto;transform:none">
         <span class="relative items-center h-full w-full text-sm uppercase flex gap-2 tracking-wide text-[rgb(0,0,0,65%)] dark:font-light dark:text-[rgb(255,255,255,90%)]" style="mask-image:linear-gradient(-75deg,hsl(var(--primary)) calc(var(--x) + 20%),transparent calc(var(--x) + 30%),hsl(var(--primary)) calc(var(--x) + 100%))">
-            Entre No Telegram 
-            <a href="https://t.me/+vidlinkpro" target="_blank" rel="noreferrer">
+            <?= htmlspecialchars($telegram_text) ?>
+            <a href="<?= htmlspecialchars($telegram_url) ?>" target="_blank" rel="noreferrer">
                 <img src="complete/resources/image_11.png" width="25" height="25" alt="telegram icon">
             </a>
         </span>

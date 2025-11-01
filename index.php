@@ -40,6 +40,16 @@ $siteTitle = $config['site']['title'] ?? 'VidLink - Biggest and Fastest Streamin
             ?>
         </div>
         
+        <!-- Content Page -->
+        <div id="page-content" class="spa-page" style="display: <?= $page === 'content' ? 'block' : 'none' ?>">
+            <?php
+            $page = 'content';
+            include 'views/partials/header.php';
+            include 'views/content.php';
+            include 'views/partials/footer.php';
+            ?>
+        </div>
+        
         <!-- Docs Page -->
         <div id="page-docs" class="spa-page" style="display: <?= $page === 'docs' ? 'block' : 'none' ?>">
             <?php

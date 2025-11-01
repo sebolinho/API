@@ -48,6 +48,17 @@ $logo_text = $config['site']['logo_text'] ?? 'MEGAEMBED';
                     </span>
                     <span class="relative z-10 tracking-wide hidden lg:block text-sm font-medium"><?= htmlspecialchars($nav_player) ?></span>
                 </a>
+                <a class="flex-1 px-2.5 sm:px-4 py-1.5 rounded-full transition-all duration-200 relative flex items-center justify-center gap-1.5 sm:gap-2 <?php echo ($page === 'content') ? '' : 'hover-nav-link'; ?>" href="?page=content" style="<?php echo ($page === 'content') ? 'color: ' . $text_primary : 'color: rgba(100, 116, 139, 1)'; ?>">
+                    <?php if ($page === 'content'): ?>
+                    <div class="absolute inset-0 rounded-full" style="opacity:1; background: <?= htmlspecialchars($navbar_selected_bg_dark) ?>"></div>
+                    <?php endif; ?>
+                    <span class="relative z-10">
+                        <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true" class="w-5 h-5" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z"></path>
+                        </svg>
+                    </span>
+                    <span class="relative z-10 tracking-wide hidden lg:block text-sm font-medium">Conteúdo</span>
+                </a>
                 <a class="flex-1 px-2.5 sm:px-4 py-1.5 rounded-full transition-all duration-200 relative flex items-center justify-center gap-1.5 sm:gap-2 <?php echo ($page === 'docs') ? '' : 'hover-nav-link'; ?>" href="?page=docs" style="<?php echo ($page === 'docs') ? 'color: ' . $text_primary : 'color: rgba(100, 116, 139, 1)'; ?>">
                     <?php if ($page === 'docs'): ?>
                     <div class="absolute inset-0 rounded-full" style="opacity:1; background: <?= htmlspecialchars($navbar_selected_bg_dark) ?>"></div>
