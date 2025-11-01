@@ -5,6 +5,10 @@ $colors = $config['colors'] ?? [];
 $navbar_hover = $colors['navbar_hover'] ?? 'rgb(147, 51, 234)';
 $navbar_selected_bg_dark = $colors['navbar_selected_bg_dark'] ?? 'linear-gradient(to right, rgb(168, 85, 247), rgb(147, 51, 234))';
 $tmdb_api_key = $config['tmdb']['api_key'] ?? '';
+// Get base URL from config or use default
+$embed_base = isset($config['settings']['player_embed_base']) 
+    ? parse_url($config['settings']['player_embed_base'], PHP_URL_SCHEME) . '://' . parse_url($config['settings']['player_embed_base'], PHP_URL_HOST)
+    : 'https://vidlink.pro';
 ?>
 <div class="flex flex-col items-center justify-center w-full" style="margin-top: 120px;">
     <div class="flex max-w-[70rem] flex-col items-center w-full h-full min-h-screen gap-2 p-4">
@@ -182,6 +186,7 @@ $tmdb_api_key = $config['tmdb']['api_key'] ?? '';
 document.addEventListener('DOMContentLoaded', function() {
     // Configuration
     const TMDB_API_KEY = '<?= htmlspecialchars($tmdb_api_key) ?>';
+    const EMBED_BASE_URL = '<?= htmlspecialchars($embed_base) ?>';
     const API_BASE_URL_FILMES = 'https://superflixapi.asia/lista?category=movie&type=tmdb&format=json';
     const API_BASE_URL_SERIES = 'https://superflixapi.asia/lista?category=serie&type=tmdb&format=json';
     const TMDB_API_BASE = 'https://api.themoviedb.org/3';
@@ -337,17 +342,34 @@ document.addEventListener('DOMContentLoaded', function() {
             ? `${TMDB_IMAGE_BASE}${item.poster_path}` 
             : 'https://placehold.co/342x513/1F2937/FFFFFF?text=Sem+Imagem';
 
-        card.innerHTML = `
-            <img src="${posterPath}" alt="Pôster de ${title}" loading="lazy" onerror="this.src='https://placehold.co/342x513/1F2937/FFFFFF?text=Erro'">
-            <div class="poster-card-content">
-                <h3 class="poster-card-title" title="${title}">${title}</h3>
-                <button class="poster-card-button" data-id="${item.id}" data-type="${currentCategory}" data-title="${title}">
-                    Ações
-                </button>
-            </div>
-        `;
+        // Create elements safely to prevent XSS
+        const img = document.createElement('img');
+        img.src = posterPath;
+        img.alt = `Pôster de ${title}`;
+        img.loading = 'lazy';
+        img.onerror = function() { this.src = 'https://placehold.co/342x513/1F2937/FFFFFF?text=Erro'; };
 
-        card.querySelector('.poster-card-button').addEventListener('click', (e) => {
+        const content = document.createElement('div');
+        content.className = 'poster-card-content';
+
+        const titleEl = document.createElement('h3');
+        titleEl.className = 'poster-card-title';
+        titleEl.title = title;
+        titleEl.textContent = title;
+
+        const button = document.createElement('button');
+        button.className = 'poster-card-button';
+        button.dataset.id = item.id;
+        button.dataset.type = currentCategory;
+        button.dataset.title = title;
+        button.textContent = 'Ações';
+
+        content.appendChild(titleEl);
+        content.appendChild(button);
+        card.appendChild(img);
+        card.appendChild(content);
+
+        button.addEventListener('click', (e) => {
             e.stopPropagation();
             const btn = e.currentTarget;
             openActionModal(btn.dataset.id, btn.dataset.type, btn.dataset.title);
@@ -369,8 +391,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function getEmbedUrl(id, type) {
         return type === 'movie' 
-            ? `https://vidlink.pro/movie/${id}`
-            : `https://vidlink.pro/tv/${id}/1/1`;
+            ? `${EMBED_BASE_URL}/movie/${id}`
+            : `${EMBED_BASE_URL}/tv/${id}/1/1`;
     }
 
     function updatePaginationControls() {
