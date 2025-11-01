@@ -33,6 +33,13 @@ $tmdb_enabled = !empty($config['tmdb']['api_key']);
                     Carregando catálogo...
                 </div>
 
+                <!-- Demo Data Warning -->
+                <div id="demo-warning" class="hidden text-center p-4 mb-4 bg-yellow-900/50 border border-yellow-700 rounded-lg">
+                    <p class="text-yellow-300 text-sm">
+                        ⚠️ Usando dados de demonstração. API externa indisponível.
+                    </p>
+                </div>
+
                 <!-- Error Message -->
                 <div id="error-message" class="hidden text-center p-10 bg-red-900/50 border border-red-700 rounded-lg">
                     <h3 class="text-xl font-bold text-red-300 mb-2">Erro ao carregar</h3>
@@ -188,6 +195,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const tabFilmes = document.getElementById('tab-filmes');
     const tabSeries = document.getElementById('tab-series');
     const loadingIndicator = document.getElementById('loading-indicator');
+    const demoWarning = document.getElementById('demo-warning');
     const errorMessage = document.getElementById('error-message');
     const errorText = document.getElementById('error-text');
     const catalogGrid = document.getElementById('catalog-grid');
@@ -228,6 +236,7 @@ document.addEventListener('DOMContentLoaded', () => {
             catalogGrid.classList.add('hidden');
             paginationControls.classList.add('hidden');
             errorMessage.classList.add('hidden');
+            demoWarning.classList.add('hidden');
         }
     }
 
@@ -285,6 +294,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Load demo data as fallback
     function loadDemoData() {
+        // Show demo warning
+        demoWarning.classList.remove('hidden');
+        
         // Sample TMDB IDs for demonstration
         if (currentCategory === 'movie') {
             allItemIds = [
