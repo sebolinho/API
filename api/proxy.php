@@ -1,5 +1,7 @@
 <?php
-// Simple proxy to avoid CORS issues
+// Simple proxy to avoid CORS issues and protect API keys
+require_once __DIR__ . '/../admin/Config.php';
+
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET');
@@ -19,11 +21,44 @@ if (!filter_var($url, FILTER_VALIDATE_URL)) {
     exit;
 }
 
-// Only allow SuperflixAPI
-if (strpos($url, 'superflixapi.asia') === false) {
+// Only allow SuperflixAPI and TMDB API
+$allowedDomains = ['superflixapi.asia', 'api.themoviedb.org'];
+$allowed = false;
+$isTmdbRequest = false;
+
+foreach ($allowedDomains as $domain) {
+    if (strpos($url, $domain) !== false) {
+        $allowed = true;
+        if ($domain === 'api.themoviedb.org') {
+            $isTmdbRequest = true;
+        }
+        break;
+    }
+}
+
+if (!$allowed) {
     http_response_code(403);
     echo json_encode(['error' => 'Forbidden URL']);
     exit;
+}
+
+// Inject TMDB API key if this is a TMDB request
+if ($isTmdbRequest) {
+    $config = Config::load();
+    $apiKey = $config['tmdb']['api_key'] ?? '';
+    
+    if (empty($apiKey)) {
+        http_response_code(500);
+        echo json_encode(['error' => 'TMDB API key not configured']);
+        exit;
+    }
+    
+    // Add or replace api_key parameter
+    $urlParts = parse_url($url);
+    parse_str($urlParts['query'] ?? '', $queryParams);
+    $queryParams['api_key'] = $apiKey;
+    
+    $url = $urlParts['scheme'] . '://' . $urlParts['host'] . $urlParts['path'] . '?' . http_build_query($queryParams);
 }
 
 // Fetch the data
@@ -31,7 +66,7 @@ $ch = curl_init();
 curl_setopt($ch, CURLOPT_URL, $url);
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
 curl_setopt($ch, CURLOPT_TIMEOUT, 30);
 
 $response = curl_exec($ch);

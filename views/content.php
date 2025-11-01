@@ -6,8 +6,8 @@ $config = Config::load();
 $colors = $config['colors'] ?? [];
 $navbar_hover = $colors['navbar_hover'] ?? 'rgb(147, 51, 234)';
 $navbar_selected_bg_dark = $colors['navbar_selected_bg_dark'] ?? 'linear-gradient(to right, rgb(168, 85, 247), rgb(147, 51, 234))';
-$tmdb_api_key = $config['tmdb']['api_key'] ?? '';
 $tmdb_language = $config['tmdb']['language'] ?? 'pt-BR';
+$tmdb_enabled = !empty($config['tmdb']['api_key']);
 ?>
 
 <div class="flex flex-col items-center justify-center w-full" style="margin-top: 120px;">
@@ -169,12 +169,11 @@ $tmdb_language = $config['tmdb']['language'] ?? 'pt-BR';
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     // Configuration
-    const TMDB_API_KEY = '<?= $tmdb_api_key ?>';
+    const TMDB_ENABLED = <?= $tmdb_enabled ? 'true' : 'false' ?>;
     const TMDB_LANGUAGE = '<?= $tmdb_language ?>';
+    const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p/w500';
     const API_BASE_URL_FILMES = 'https://superflixapi.asia/lista?category=movie&type=tmdb&format=json';
     const API_BASE_URL_SERIES = 'https://superflixapi.asia/lista?category=serie&type=tmdb&format=json';
-    const TMDB_API_BASE = 'https://api.themoviedb.org/3';
-    const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p/w500';
     const ITEMS_PER_PAGE = 35; // 7 columns x 5 rows
 
     // Application state
@@ -247,13 +246,13 @@ document.addEventListener('DOMContentLoaded', () => {
         allItemIds = [];
         const url = (currentCategory === 'movie') ? API_BASE_URL_FILMES : API_BASE_URL_SERIES;
 
-        if (!TMDB_API_KEY) {
+        if (!TMDB_ENABLED) {
             showError('API Key do TMDB não configurada.');
             return;
         }
 
         try {
-            const response = await fetch(`api/proxy.php?url=${encodeURIComponent(url)}`);
+            const response = await fetch(`/api/proxy.php?url=${encodeURIComponent(url)}`);
             
             if (!response.ok) {
                 throw new Error(`Erro na API Superflix: ${response.statusText}`);
@@ -349,18 +348,24 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Fetch item details from TMDB
+    // Fetch item details from TMDB via proxy
     async function fetchItemDetails(id) {
         const type = (currentCategory === 'movie') ? 'movie' : 'tv';
-        const url = `${TMDB_API_BASE}/${type}/${id}?api_key=${TMDB_API_KEY}&language=${TMDB_LANGUAGE}`;
+        const tmdbUrl = `https://api.themoviedb.org/3/${type}/${id}?language=${TMDB_LANGUAGE}`;
 
         try {
-            const response = await fetch(url);
+            const response = await fetch(`/api/proxy.php?url=${encodeURIComponent(tmdbUrl)}`);
             if (!response.ok) {
                 console.warn(`Não foi possível buscar o item ${type}/${id}. Status: ${response.status}`);
                 return null;
             }
-            return await response.json();
+            const data = await response.json();
+            // Check if error response
+            if (data.error) {
+                console.warn(`Erro na resposta: ${data.error}`);
+                return null;
+            }
+            return data;
         } catch (error) {
             console.error(`Erro no fetch para ${type}/${id}:`, error);
             return null;
@@ -427,11 +432,23 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         try {
             await navigator.clipboard.writeText(url);
-            alert('Link copiado!');
+            const originalText = modalCopyLink.textContent;
+            modalCopyLink.textContent = '✓ Link Copiado!';
+            modalCopyLink.style.backgroundColor = '#059669';
+            setTimeout(() => {
+                modalCopyLink.textContent = originalText;
+                modalCopyLink.style.backgroundColor = '';
+            }, 2000);
         } catch (err) {
             console.error('Erro ao copiar:', err);
+            const originalText = modalCopyLink.textContent;
+            modalCopyLink.textContent = '✗ Erro ao Copiar';
+            modalCopyLink.style.backgroundColor = '#dc2626';
+            setTimeout(() => {
+                modalCopyLink.textContent = originalText;
+                modalCopyLink.style.backgroundColor = '';
+            }, 2000);
         }
-        closeActionModal();
     });
 
     modalCopyTmdb.addEventListener('click', async () => {
@@ -439,11 +456,23 @@ document.addEventListener('DOMContentLoaded', () => {
         const { id } = currentModalData;
         try {
             await navigator.clipboard.writeText(id);
-            alert('TMDB ID copiado!');
+            const originalText = modalCopyTmdb.textContent;
+            modalCopyTmdb.textContent = '✓ TMDB ID Copiado!';
+            modalCopyTmdb.style.backgroundColor = '#059669';
+            setTimeout(() => {
+                modalCopyTmdb.textContent = originalText;
+                modalCopyTmdb.style.backgroundColor = '';
+            }, 2000);
         } catch (err) {
             console.error('Erro ao copiar:', err);
+            const originalText = modalCopyTmdb.textContent;
+            modalCopyTmdb.textContent = '✗ Erro ao Copiar';
+            modalCopyTmdb.style.backgroundColor = '#dc2626';
+            setTimeout(() => {
+                modalCopyTmdb.textContent = originalText;
+                modalCopyTmdb.style.backgroundColor = '';
+            }, 2000);
         }
-        closeActionModal();
     });
 
     modalClose.addEventListener('click', closeActionModal);
