@@ -166,10 +166,8 @@ $tmdb_api_key = $config['tmdb']['api_key'] ?? '';
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Configuration
-    const TMDB_API_KEY = '<?= $tmdb_api_key ?>';
-    const API_BASE_URL_FILMES = 'https://superflixapi.asia/lista?category=movie&type=tmdb&format=json';
-    const API_BASE_URL_SERIES = 'https://superflixapi.asia/lista?category=serie&type=tmdb&format=json';
-    const TMDB_API_BASE = 'https://api.themoviedb.org/3';
+    const SUPERFLIX_PROXY_URL = window.location.origin + '/api/superflix.php';
+    const TMDB_PROXY_URL = window.location.origin + '/api/tmdb.php';
     const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p/w500';
     const ITEMS_PER_PAGE = 20;
     const EMBED_BASE_URL = window.location.origin;
@@ -232,12 +230,7 @@ document.addEventListener('DOMContentLoaded', function() {
     async function loadAllItemIds() {
         showLoading(true);
         allItemIds = [];
-        const url = (currentCategory === 'movie') ? API_BASE_URL_FILMES : API_BASE_URL_SERIES;
-
-        if (!TMDB_API_KEY) {
-            showError('Chave de API do TMDB não configurada.');
-            return;
-        }
+        const url = `${SUPERFLIX_PROXY_URL}?category=${currentCategory}`;
 
         try {
             const response = await fetch(url);
@@ -246,14 +239,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 throw new Error(`Erro na API Superflix: ${response.statusText}`);
             }
             
-            const data = await response.json();
+            const result = await response.json();
             
-            if (Array.isArray(data) && data.length > 0) {
-                allItemIds = data;
+            if (result.success && Array.isArray(result.data) && result.data.length > 0) {
+                allItemIds = result.data;
                 totalPages = Math.ceil(allItemIds.length / ITEMS_PER_PAGE);
                 await loadCatalogPage();
             } else {
-                showError('A API retornou uma lista vazia.');
+                showError(result.error || 'A API retornou uma lista vazia.');
             }
 
         } catch (error) {
@@ -302,7 +295,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     async function fetchItemDetails(id) {
         const type = (currentCategory === 'movie') ? 'movie' : 'tv';
-        const url = `${TMDB_API_BASE}/${type}/${id}?api_key=${TMDB_API_KEY}&language=pt-BR`;
+        const url = `${TMDB_PROXY_URL}?type=${type}&id=${id}`;
 
         try {
             const response = await fetch(url);
@@ -310,7 +303,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.warn(`Não foi possível buscar o item ${type}/${id}. Status: ${response.status}`);
                 return null;
             }
-            return await response.json();
+            const result = await response.json();
+            if (result.success) {
+                return result.data;
+            }
+            return null;
         } catch (error) {
             console.error(`Erro no fetch para ${type}/${id}:`, error);
             return null;
