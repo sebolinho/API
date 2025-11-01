@@ -20,18 +20,18 @@ $siteTitle = $config['site']['title'] ?? 'VidLink - Biggest and Fastest Streamin
 <body>
     <?php
     // Get initial page
-    $page = isset($_GET['page']) ? $_GET['page'] : 'home';
+    $initial_page = isset($_GET['page']) ? $_GET['page'] : 'home';
     ?>
     
     <!-- SPA Container -->
     <div id="spa-container">
         <!-- Home Page -->
-        <div id="page-home" class="spa-page" style="display: <?= $page === 'home' ? 'block' : 'none' ?>">
+        <div id="page-home" class="spa-page" style="display: <?= $initial_page === 'home' ? 'block' : 'none' ?>">
             <?php include 'views/home.php'; ?>
         </div>
         
         <!-- Player Page -->
-        <div id="page-player" class="spa-page" style="display: <?= $page === 'player' ? 'block' : 'none' ?>">
+        <div id="page-player" class="spa-page" style="display: <?= $initial_page === 'player' ? 'block' : 'none' ?>">
             <?php 
             $page = 'player';
             include 'views/partials/header.php';
@@ -41,7 +41,7 @@ $siteTitle = $config['site']['title'] ?? 'VidLink - Biggest and Fastest Streamin
         </div>
         
         <!-- Content Page -->
-        <div id="page-content" class="spa-page" style="display: <?= $page === 'content' ? 'block' : 'none' ?>">
+        <div id="page-content" class="spa-page" style="display: <?= $initial_page === 'content' ? 'block' : 'none' ?>">
             <?php
             $page = 'content';
             include 'views/partials/header.php';
@@ -51,7 +51,7 @@ $siteTitle = $config['site']['title'] ?? 'VidLink - Biggest and Fastest Streamin
         </div>
         
         <!-- Docs Page -->
-        <div id="page-docs" class="spa-page" style="display: <?= $page === 'docs' ? 'block' : 'none' ?>">
+        <div id="page-docs" class="spa-page" style="display: <?= $initial_page === 'docs' ? 'block' : 'none' ?>">
             <?php
             $page = 'docs';
             include 'views/partials/header.php';
