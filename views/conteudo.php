@@ -187,8 +187,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Configuration
     const TMDB_API_KEY = '<?= htmlspecialchars($tmdb_api_key) ?>';
     const EMBED_BASE_URL = '<?= htmlspecialchars($embed_base) ?>';
-    const API_BASE_URL_FILMES = 'https://superflixapi.asia/lista?category=movie&type=tmdb&format=json';
-    const API_BASE_URL_SERIES = 'https://superflixapi.asia/lista?category=serie&type=tmdb&format=json';
+    const API_BASE_URL_FILMES = 'api/proxy.php?category=movie&type=tmdb&format=json';
+    const API_BASE_URL_SERIES = 'api/proxy.php?category=serie&type=tmdb&format=json';
     const TMDB_API_BASE = 'https://api.themoviedb.org/3';
     const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p/w342';
     const ITEMS_PER_PAGE = 35; // 7 columns x 5 rows
