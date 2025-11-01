@@ -1,10 +1,22 @@
 <?php
 // Simple proxy to avoid CORS issues and protect API keys
-require_once __DIR__ . '/../admin/Config.php';
+// Disable HTML error output to prevent JSON parsing errors
+ini_set('display_errors', 0);
+error_reporting(E_ALL);
 
+// Set JSON content type first
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET');
+
+// Try to load config, handle errors gracefully
+try {
+    require_once __DIR__ . '/../admin/Config.php';
+} catch (Exception $e) {
+    http_response_code(500);
+    echo json_encode(['error' => 'Configuration error: ' . $e->getMessage()]);
+    exit;
+}
 
 $url = $_GET['url'] ?? '';
 
@@ -44,21 +56,27 @@ if (!$allowed) {
 
 // Inject TMDB API key if this is a TMDB request
 if ($isTmdbRequest) {
-    $config = Config::load();
-    $apiKey = $config['tmdb']['api_key'] ?? '';
-    
-    if (empty($apiKey)) {
+    try {
+        $config = Config::load();
+        $apiKey = $config['tmdb']['api_key'] ?? '';
+        
+        if (empty($apiKey)) {
+            http_response_code(500);
+            echo json_encode(['error' => 'TMDB API key not configured']);
+            exit;
+        }
+        
+        // Add or replace api_key parameter
+        $urlParts = parse_url($url);
+        parse_str($urlParts['query'] ?? '', $queryParams);
+        $queryParams['api_key'] = $apiKey;
+        
+        $url = $urlParts['scheme'] . '://' . $urlParts['host'] . $urlParts['path'] . '?' . http_build_query($queryParams);
+    } catch (Exception $e) {
         http_response_code(500);
-        echo json_encode(['error' => 'TMDB API key not configured']);
+        echo json_encode(['error' => 'Failed to load configuration: ' . $e->getMessage()]);
         exit;
     }
-    
-    // Add or replace api_key parameter
-    $urlParts = parse_url($url);
-    parse_str($urlParts['query'] ?? '', $queryParams);
-    $queryParams['api_key'] = $apiKey;
-    
-    $url = $urlParts['scheme'] . '://' . $urlParts['host'] . $urlParts['path'] . '?' . http_build_query($queryParams);
 }
 
 // Fetch the data
@@ -68,15 +86,29 @@ curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
 curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
 curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (compatible; ProxyBot/1.0)');
 
 $response = curl_exec($ch);
 $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+$curlError = curl_error($ch);
 curl_close($ch);
 
-if ($httpCode == 200 && $response) {
+if ($response === false) {
+    http_response_code(500);
+    $source = $isTmdbRequest ? 'TMDB API' : 'external API';
+    echo json_encode([
+        'error' => "Failed to connect to {$source}",
+        'details' => $curlError,
+        'http_code' => $httpCode
+    ]);
+} elseif ($httpCode == 200 && $response) {
     echo $response;
 } else {
     http_response_code($httpCode ?: 500);
     $source = $isTmdbRequest ? 'TMDB API' : 'external API';
-    echo json_encode(['error' => "Failed to fetch data from {$source}", 'http_code' => $httpCode]);
+    echo json_encode([
+        'error' => "Failed to fetch data from {$source}",
+        'http_code' => $httpCode,
+        'response' => substr($response, 0, 200)  // First 200 chars for debugging
+    ]);
 }
