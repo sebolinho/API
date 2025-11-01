@@ -7,8 +7,7 @@ $colors = $config['colors'] ?? [];
 $navbar_hover = $colors['navbar_hover'] ?? 'rgb(147, 51, 234)';
 $navbar_selected_bg_dark = $colors['navbar_selected_bg_dark'] ?? 'linear-gradient(to right, rgb(168, 85, 247), rgb(147, 51, 234))';
 $tmdb_language = $config['tmdb']['language'] ?? 'pt-BR';
-$tmdb_api_key = $config['tmdb']['api_key'] ?? '';
-$tmdb_enabled = !empty($tmdb_api_key);
+$tmdb_enabled = !empty($config['tmdb']['api_key']);
 ?>
 
 <div class="flex flex-col items-center justify-center w-full" style="margin-top: 120px;">
@@ -178,7 +177,6 @@ $tmdb_enabled = !empty($tmdb_api_key);
 document.addEventListener('DOMContentLoaded', () => {
     // Configuration
     const TMDB_ENABLED = <?= $tmdb_enabled ? 'true' : 'false' ?>;
-    const TMDB_API_KEY = '<?= $tmdb_api_key ?>';
     const TMDB_LANGUAGE = '<?= $tmdb_language ?>';
     const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p/w500';
     const API_BASE_URL_FILMES = 'https://superflixapi.asia/lista?category=movie&type=tmdb&format=json';
@@ -263,19 +261,19 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-            // Direct fetch to SuperflixAPI
-            const response = await fetch(url, {
-                mode: 'cors',
-                headers: {
-                    'Accept': 'application/json'
-                }
-            });
+            // Fetch via proxy
+            const response = await fetch(`/api/proxy.php?url=${encodeURIComponent(url)}`);
             
             if (!response.ok) {
                 throw new Error(`Erro na API Superflix: ${response.statusText}`);
             }
             
             const data = await response.json();
+            
+            // Check if error response
+            if (data.error) {
+                throw new Error(data.error);
+            }
             
             if (Array.isArray(data) && data.length > 0) {
                 allItemIds = data.map(id => String(id).trim());
@@ -366,16 +364,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // Fetch item details from TMDB directly
     async function fetchItemDetails(id) {
         const type = (currentCategory === 'movie') ? 'movie' : 'tv';
-        const tmdbUrl = `https://api.themoviedb.org/3/${type}/${id}?api_key=${TMDB_API_KEY}&language=${TMDB_LANGUAGE}`;
+        const tmdbUrl = `https://api.themoviedb.org/3/${type}/${id}?language=${TMDB_LANGUAGE}`;
 
         try {
-            // Direct fetch to TMDB API
-            const response = await fetch(tmdbUrl, {
-                mode: 'cors',
-                headers: {
-                    'Accept': 'application/json'
-                }
-            });
+            // Fetch via proxy (API key injected server-side)
+            const response = await fetch(`/api/proxy.php?url=${encodeURIComponent(tmdbUrl)}`);
             
             if (!response.ok) {
                 console.warn(`Não foi possível buscar o item ${type}/${id}. Status: ${response.status}`);
@@ -383,6 +376,13 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             
             const data = await response.json();
+            
+            // Check if error response
+            if (data.error) {
+                console.warn(`Erro na resposta: ${data.error}`);
+                return null;
+            }
+            
             return data;
         } catch (error) {
             console.error(`Erro no fetch para ${type}/${id}:`, error);
