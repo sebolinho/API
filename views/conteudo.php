@@ -9,6 +9,9 @@ $tmdb_api_key = $config['tmdb']['api_key'] ?? '';
 $embed_base = isset($config['settings']['player_embed_base']) 
     ? parse_url($config['settings']['player_embed_base'], PHP_URL_SCHEME) . '://' . parse_url($config['settings']['player_embed_base'], PHP_URL_HOST)
     : 'https://vidlink.pro';
+// Get catalog configuration
+$grid_columns = $config['catalog']['grid_columns'] ?? 8;
+$items_per_page = $config['catalog']['items_per_page'] ?? 64;
 ?>
 <div class="flex flex-col items-center justify-center w-full" style="margin-top: 120px;">
     <div class="flex max-w-[70rem] flex-col items-center w-full h-full min-h-screen gap-2 p-4">
@@ -38,8 +41,8 @@ $embed_base = isset($config['settings']['player_embed_base'])
                     <p id="error-text" class="text-red-400">Não foi possível buscar os dados.</p>
                 </div>
 
-                <!-- Catalog Grid (7 columns x 5 rows = 35 items per page) -->
-                <div id="catalog-grid" class="hidden grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-7 gap-3 md:gap-4">
+                <!-- Catalog Grid -->
+                <div id="catalog-grid" class="hidden grid gap-3 md:gap-4" style="grid-template-columns: repeat(<?= $grid_columns ?>, minmax(0, 1fr));">
                     <!-- Posters will be inserted here by JavaScript -->
                 </div>
             </div>
@@ -58,27 +61,6 @@ $embed_base = isset($config['settings']['player_embed_base'])
             </div>
 
         </main>
-    </div>
-</div>
-
-<!-- Action Modal -->
-<div id="action-modal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-    <div class="bg-gray-800 rounded-xl border border-white/10 p-6 max-w-md w-full shadow-2xl">
-        <h3 id="modal-title" class="text-xl font-bold text-white mb-4"></h3>
-        <div class="space-y-3">
-            <button id="modal-open-link" class="w-full px-4 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-all font-medium">
-                Abrir Link
-            </button>
-            <button id="modal-copy-link" class="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all font-medium">
-                Copiar Link
-            </button>
-            <button id="modal-copy-tmdb" class="w-full px-4 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-all font-medium">
-                Copiar TMDB ID
-            </button>
-            <button id="modal-close" class="w-full px-4 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-all font-medium">
-                Fechar
-            </button>
-        </div>
     </div>
 </div>
 
@@ -112,6 +94,7 @@ $embed_base = isset($config['settings']['player_embed_base'])
 
     /* Poster card styles */
     .poster-card {
+        position: relative;
         background-color: #1F2937;
         border-radius: 12px;
         overflow: hidden;
@@ -129,31 +112,50 @@ $embed_base = isset($config['settings']['player_embed_base'])
         aspect-ratio: 2 / 3;
         object-fit: cover;
     }
-    .poster-card-content {
-        padding: 12px;
+    .poster-card-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.8) 100%);
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        padding: 16px;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    .poster-card:hover .poster-card-overlay {
+        opacity: 1;
     }
     .poster-card-title {
         font-size: 0.875rem;
         font-weight: 600;
         color: white;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        margin-bottom: 8px;
+        margin-bottom: 12px;
+        line-height: 1.3;
     }
-    .poster-card-button {
+    .poster-card-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+    .poster-card-action-btn {
         width: 100%;
-        background-color: #4B5563;
+        background-color: rgba(75, 85, 99, 0.9);
         color: white;
         font-weight: 500;
         padding: 8px;
-        border-radius: 8px;
+        border-radius: 6px;
         text-align: center;
         transition: background-color 0.2s;
-        font-size: 0.875rem;
+        font-size: 0.75rem;
+        border: none;
+        cursor: pointer;
     }
-    .poster-card-button:hover {
-        background-color: #6B7280;
+    .poster-card-action-btn:hover {
+        background-color: rgba(107, 114, 128, 0.9);
     }
 
     /* Page number button styles */
@@ -187,11 +189,11 @@ document.addEventListener('DOMContentLoaded', function() {
     // Configuration
     const TMDB_API_KEY = '<?= htmlspecialchars($tmdb_api_key) ?>';
     const EMBED_BASE_URL = '<?= htmlspecialchars($embed_base) ?>';
-    const API_BASE_URL_FILMES = 'api/proxy.php?category=movie&type=tmdb&format=json';
-    const API_BASE_URL_SERIES = 'api/proxy.php?category=serie&type=tmdb&format=json';
+    const API_BASE_URL_FILMES = 'api/proxy.php?category=movie&type=tmdb&format=json&order=desc';
+    const API_BASE_URL_SERIES = 'api/proxy.php?category=serie&type=tmdb&format=json&order=desc';
     const TMDB_API_BASE = 'https://api.themoviedb.org/3';
     const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p/w342';
-    const ITEMS_PER_PAGE = 35; // 7 columns x 5 rows
+    const ITEMS_PER_PAGE = <?= $items_per_page ?>;
     const MAX_PAGE_BUTTONS = 6;
 
     // State
@@ -200,7 +202,6 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentPage = 1;
     let totalPages = 1;
     let isLoading = false;
-    let currentModalData = null;
 
     // DOM Elements
     const tabFilmes = document.getElementById('tab-filmes');
@@ -213,12 +214,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const prevPageBtn = document.getElementById('prev-page');
     const nextPageBtn = document.getElementById('next-page');
     const pageNumbers = document.getElementById('page-numbers');
-    const actionModal = document.getElementById('action-modal');
-    const modalTitle = document.getElementById('modal-title');
-    const modalOpenLink = document.getElementById('modal-open-link');
-    const modalCopyLink = document.getElementById('modal-copy-link');
-    const modalCopyTmdb = document.getElementById('modal-copy-tmdb');
-    const modalClose = document.getElementById('modal-close');
 
     // Functions
     function showLoading(show) {
@@ -349,44 +344,73 @@ document.addEventListener('DOMContentLoaded', function() {
         img.loading = 'lazy';
         img.onerror = function() { this.src = 'https://placehold.co/342x513/1F2937/FFFFFF?text=Erro'; };
 
-        const content = document.createElement('div');
-        content.className = 'poster-card-content';
+        // Create overlay
+        const overlay = document.createElement('div');
+        overlay.className = 'poster-card-overlay';
 
         const titleEl = document.createElement('h3');
         titleEl.className = 'poster-card-title';
-        titleEl.title = title;
         titleEl.textContent = title;
 
-        const button = document.createElement('button');
-        button.className = 'poster-card-button';
-        button.dataset.id = item.id;
-        button.dataset.type = currentCategory;
-        button.dataset.title = title;
-        button.textContent = 'Ações';
+        const actionsDiv = document.createElement('div');
+        actionsDiv.className = 'poster-card-actions';
 
-        content.appendChild(titleEl);
-        content.appendChild(button);
-        card.appendChild(img);
-        card.appendChild(content);
-
-        button.addEventListener('click', (e) => {
+        // Open Link button
+        const openBtn = document.createElement('button');
+        openBtn.className = 'poster-card-action-btn';
+        openBtn.textContent = 'Abrir Link';
+        openBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            const btn = e.currentTarget;
-            openActionModal(btn.dataset.id, btn.dataset.type, btn.dataset.title);
+            const url = getEmbedUrl(item.id, currentCategory);
+            window.open(url, '_blank');
         });
 
+        // Copy Link button
+        const copyLinkBtn = document.createElement('button');
+        copyLinkBtn.className = 'poster-card-action-btn';
+        copyLinkBtn.textContent = 'Copiar Link';
+        copyLinkBtn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            const url = getEmbedUrl(item.id, currentCategory);
+            try {
+                await navigator.clipboard.writeText(url);
+                copyLinkBtn.textContent = 'Link Copiado!';
+                setTimeout(() => {
+                    copyLinkBtn.textContent = 'Copiar Link';
+                }, 2000);
+            } catch (err) {
+                console.error('Erro ao copiar:', err);
+            }
+        });
+
+        // Copy TMDB ID button
+        const copyTmdbBtn = document.createElement('button');
+        copyTmdbBtn.className = 'poster-card-action-btn';
+        copyTmdbBtn.textContent = 'Copiar TMDB';
+        copyTmdbBtn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            try {
+                await navigator.clipboard.writeText(item.id.toString());
+                copyTmdbBtn.textContent = 'ID Copiado!';
+                setTimeout(() => {
+                    copyTmdbBtn.textContent = 'Copiar TMDB';
+                }, 2000);
+            } catch (err) {
+                console.error('Erro ao copiar:', err);
+            }
+        });
+
+        actionsDiv.appendChild(openBtn);
+        actionsDiv.appendChild(copyLinkBtn);
+        actionsDiv.appendChild(copyTmdbBtn);
+
+        overlay.appendChild(titleEl);
+        overlay.appendChild(actionsDiv);
+
+        card.appendChild(img);
+        card.appendChild(overlay);
+
         return card;
-    }
-
-    function openActionModal(id, type, title) {
-        currentModalData = { id, type, title };
-        modalTitle.textContent = title;
-        actionModal.classList.remove('hidden');
-    }
-
-    function closeActionModal() {
-        actionModal.classList.add('hidden');
-        currentModalData = null;
     }
 
     function getEmbedUrl(id, type) {
@@ -446,50 +470,6 @@ document.addEventListener('DOMContentLoaded', function() {
     tabSeries.addEventListener('click', handleTabClick);
     prevPageBtn.addEventListener('click', goToPrevPage);
     nextPageBtn.addEventListener('click', goToNextPage);
-    
-    modalOpenLink.addEventListener('click', () => {
-        if (currentModalData) {
-            const url = getEmbedUrl(currentModalData.id, currentModalData.type);
-            window.open(url, '_blank');
-            closeActionModal();
-        }
-    });
-
-    modalCopyLink.addEventListener('click', async () => {
-        if (currentModalData) {
-            const url = getEmbedUrl(currentModalData.id, currentModalData.type);
-            try {
-                await navigator.clipboard.writeText(url);
-                modalCopyLink.textContent = 'Link Copiado!';
-                setTimeout(() => {
-                    modalCopyLink.textContent = 'Copiar Link';
-                }, 2000);
-            } catch (err) {
-                console.error('Erro ao copiar:', err);
-            }
-        }
-    });
-
-    modalCopyTmdb.addEventListener('click', async () => {
-        if (currentModalData) {
-            try {
-                await navigator.clipboard.writeText(currentModalData.id);
-                modalCopyTmdb.textContent = 'TMDB ID Copiado!';
-                setTimeout(() => {
-                    modalCopyTmdb.textContent = 'Copiar TMDB ID';
-                }, 2000);
-            } catch (err) {
-                console.error('Erro ao copiar:', err);
-            }
-        }
-    });
-
-    modalClose.addEventListener('click', closeActionModal);
-    actionModal.addEventListener('click', (e) => {
-        if (e.target === actionModal) {
-            closeActionModal();
-        }
-    });
 
     // Initial load
     loadAllItemIds();

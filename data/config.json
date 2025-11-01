@@ -55,6 +55,10 @@
     "favicon": "complete/resources/image_1.ico",
     "player_embed_base": "https://vidlink.pro/movie/94997"
   },
+  "catalog": {
+    "grid_columns": 8,
+    "items_per_page": 64
+  },
   "tv_channels": [
     {
       "id": "1",
