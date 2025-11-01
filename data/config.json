@@ -15,7 +15,8 @@
   "navigation": {
     "welcome_text": "Welcome",
     "player_text": "Player",
-    "docs_text": "Docs"
+    "docs_text": "Docs",
+    "content_text": "Conteúdo"
   },
   "social": {
     "telegram_url": "https://t.me/+vidlinkpro",
