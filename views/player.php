@@ -120,11 +120,12 @@ $display_modules = empty($config_modules) ? $all_modules : array_intersect_key($
 
     .cursor-pill {
         position: absolute; inset: 0; z-index: 0; border-radius: 9999px;
-        background-color: #4f79a1;
+        background: <?= htmlspecialchars($navbar_selected_bg_dark) ?>;
         box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
         opacity: 0; transition: opacity 0.2s ease-in-out;
     }
     .tab-button[data-selected="true"] .cursor-pill { opacity: 1; }
+    .tab-button:hover:not([data-selected="true"]) { color: <?= htmlspecialchars($navbar_hover) ?>; }
 
     .tab-content {
         width: 100%; display: none; align-items: center; flex-direction: column;

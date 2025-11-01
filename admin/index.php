@@ -232,6 +232,60 @@ if (isset($_SESSION['admin_logged_in'])) {
         header('Location: index.php?tab=modules');
         exit;
     }
+    
+    // Add new module
+    if (isset($_POST['add_module'])) {
+        $module_id = $_POST['new_module_id'] ?? '';
+        $module_name = $_POST['new_module_name'] ?? '';
+        $module_type = $_POST['new_module_type'] ?? 'movie';
+        $module_icon = $_POST['new_module_icon'] ?? '📄';
+        
+        if (!empty($module_id) && !empty($module_name)) {
+            if (!isset($config['modules'])) {
+                $config['modules'] = [];
+            }
+            
+            // Check if ID already exists
+            $exists = false;
+            foreach ($config['modules'] as $m) {
+                if ($m['id'] === $module_id) {
+                    $exists = true;
+                    break;
+                }
+            }
+            
+            if (!$exists) {
+                $config['modules'][] = [
+                    'id' => $module_id,
+                    'name' => $module_name,
+                    'enabled' => true,
+                    'url_format' => $module_type,
+                    'icon' => $module_icon,
+                    'order' => count($config['modules']) + 1
+                ];
+                
+                Config::save($config);
+                header('Location: index.php?tab=modules');
+                exit;
+            }
+        }
+    }
+    
+    // Delete module
+    if (isset($_POST['delete_module'])) {
+        $module_id = $_POST['delete_module_id'] ?? '';
+        
+        if (!empty($module_id) && isset($config['modules'])) {
+            $config['modules'] = array_filter($config['modules'], function($m) use ($module_id) {
+                return $m['id'] !== $module_id;
+            });
+            $config['modules'] = array_values($config['modules']);
+            
+            Config::save($config);
+            header('Location: index.php?tab=modules');
+            exit;
+        }
+    }
 }
 
 // Check if logged in
@@ -933,42 +987,78 @@ $config = Config::load();
                 <h3>Player Modules Management</h3>
                 <p style="color: #888; margin-bottom: 1.5rem;">Enable or disable player modules. Disabled modules won't appear in the player page.</p>
                 
+                <h4 style="margin: 1.5rem 0 1rem; color: #764ba2;">Add New Module</h4>
+                <form method="POST" style="background: #f9f9f9; padding: 1.5rem; border-radius: 5px; margin-bottom: 2rem;">
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label>Module Name</label>
+                            <input type="text" name="new_module_name" required placeholder="e.g., Anime Player">
+                        </div>
+                        <div class="form-group">
+                            <label>Module ID (slug)</label>
+                            <input type="text" name="new_module_id" required placeholder="e.g., anime (lowercase, no spaces)">
+                            <small style="color: #888;">Used internally, must be unique</small>
+                        </div>
+                        <div class="form-group">
+                            <label>Link Format Type</label>
+                            <select name="new_module_type" id="new_module_type" style="width: 100%; padding: 0.75rem; border: 2px solid #e1e8ed; border-radius: 5px; font-size: 1rem;">
+                                <option value="movie">Movie Format (e.g., /movie/123)</option>
+                                <option value="series">Series Format (e.g., /tv/123/1/1)</option>
+                                <option value="tv">TV Format (with channels dropdown)</option>
+                            </select>
+                            <small style="color: #888;">Choose how URLs will be structured</small>
+                        </div>
+                        <div class="form-group">
+                            <label>Icon Emoji</label>
+                            <input type="text" name="new_module_icon" maxlength="2" placeholder="🎭">
+                            <small style="color: #888;">Optional emoji for display</small>
+                        </div>
+                    </div>
+                    <button type="submit" name="add_module" style="background: #28a745; color: white; padding: 0.75rem 1.5rem; border: none; border-radius: 5px; font-weight: 600; cursor: pointer; margin-top: 1rem;">➕ Add Module</button>
+                </form>
+                
+                <h4 style="margin: 1.5rem 0 1rem; color: #764ba2;">Existing Modules</h4>
                 <div style="display: grid; gap: 1rem;">
                     <?php
-                    $modules = [
-                        ['id' => 'movie', 'name' => 'Movie Player', 'icon' => '🎬'],
-                        ['id' => 'series', 'name' => 'Series Player', 'icon' => '📺'],
-                        ['id' => 'tv', 'name' => 'TV Player', 'icon' => '📡']
-                    ];
-                    
                     $config_modules = $config['modules'] ?? [];
-                    $enabled_modules = array_column($config_modules, 'id');
-                    
-                    foreach ($modules as $module):
-                        $is_enabled = empty($config_modules) || in_array($module['id'], $enabled_modules);
+                    if (empty($config_modules)):
+                    ?>
+                    <p style="color: #888; padding: 2rem; text-align: center; background: #f9f9f9; border-radius: 5px;">No modules configured. Add your first module above!</p>
+                    <?php else:
+                    foreach ($config_modules as $module):
+                        $is_enabled = $module['enabled'] ?? true;
                     ?>
                     <div style="background: #f9f9f9; padding: 1.5rem; border-radius: 10px; display: flex; align-items: center; justify-content: space-between;">
                         <div style="display: flex; align-items: center; gap: 1rem;">
-                            <span style="font-size: 2rem;"><?= $module['icon'] ?></span>
+                            <span style="font-size: 2rem;"><?= htmlspecialchars($module['icon'] ?? '📄') ?></span>
                             <div>
-                                <h4 style="margin: 0; color: #333;"><?= $module['name'] ?></h4>
-                                <p style="margin: 0.25rem 0 0; color: #888; font-size: 0.875rem;">ID: <?= $module['id'] ?></p>
+                                <h4 style="margin: 0; color: #333;"><?= htmlspecialchars($module['name']) ?></h4>
+                                <p style="margin: 0.25rem 0 0; color: #888; font-size: 0.875rem;">
+                                    ID: <?= htmlspecialchars($module['id']) ?> | 
+                                    Type: <?= htmlspecialchars($module['url_format'] ?? 'movie') ?>
+                                </p>
                             </div>
                         </div>
-                        <form method="POST" style="margin: 0;">
-                            <input type="hidden" name="module_id" value="<?= $module['id'] ?>">
-                            <input type="hidden" name="module_name" value="<?= $module['name'] ?>">
-                            <input type="hidden" name="module_enabled" value="<?= $is_enabled ? '0' : '1' ?>">
-                            <button type="submit" name="toggle_module" style="padding: 0.5rem 1.5rem; border-radius: 5px; border: none; cursor: pointer; font-weight: 600; transition: all 0.3s; <?= $is_enabled ? 'background: #28a745; color: white;' : 'background: #dc3545; color: white;' ?>">
-                                <?= $is_enabled ? '✓ Enabled' : '✗ Disabled' ?>
-                            </button>
-                        </form>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <form method="POST" style="margin: 0;">
+                                <input type="hidden" name="module_id" value="<?= htmlspecialchars($module['id']) ?>">
+                                <input type="hidden" name="module_name" value="<?= htmlspecialchars($module['name']) ?>">
+                                <input type="hidden" name="module_enabled" value="<?= $is_enabled ? '0' : '1' ?>">
+                                <button type="submit" name="toggle_module" style="padding: 0.5rem 1.5rem; border-radius: 5px; border: none; cursor: pointer; font-weight: 600; transition: all 0.3s; <?= $is_enabled ? 'background: #28a745; color: white;' : 'background: #dc3545; color: white;' ?>">
+                                    <?= $is_enabled ? '✓ Enabled' : '✗ Disabled' ?>
+                                </button>
+                            </form>
+                            <form method="POST" style="margin: 0;" onsubmit="return confirm('Delete this module?');">
+                                <input type="hidden" name="delete_module_id" value="<?= htmlspecialchars($module['id']) ?>">
+                                <button type="submit" name="delete_module" style="padding: 0.5rem 1rem; border-radius: 5px; border: none; cursor: pointer; font-weight: 600; background: #dc3545; color: white;">🗑️</button>
+                            </form>
+                        </div>
                     </div>
-                    <?php endforeach; ?>
+                    <?php endforeach; endif; ?>
                 </div>
                 
                 <div style="margin-top: 2rem; padding: 1rem; background: #e3f2fd; border-radius: 5px; border-left: 4px solid #2196f3;">
-                    <p style="margin: 0; color: #1976d2;"><strong>Note:</strong> Changes to modules will affect the player page navigation. Refresh the player page to see updates.</p>
+                    <p style="margin: 0; color: #1976d2;"><strong>Note:</strong> For TV-type modules, you'll need to add channels in the TV Channels tab. Changes take effect immediately on the player page (no reload needed with SPA!).</p>
                 </div>
             </div>
         </div>

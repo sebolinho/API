@@ -19,29 +19,82 @@ $siteTitle = $config['site']['title'] ?? 'VidLink - Biggest and Fastest Streamin
 </head>
 <body>
     <?php
-    // Simple PHP SPA Router
+    // Get initial page
     $page = isset($_GET['page']) ? $_GET['page'] : 'home';
+    ?>
     
-    // Route to appropriate view
-    switch ($page) {
-        case 'player':
-            // Include header for non-home pages
+    <!-- SPA Container -->
+    <div id="spa-container">
+        <!-- Home Page -->
+        <div id="page-home" class="spa-page" style="display: <?= $page === 'home' ? 'block' : 'none' ?>">
+            <?php include 'views/home.php'; ?>
+        </div>
+        
+        <!-- Player Page -->
+        <div id="page-player" class="spa-page" style="display: <?= $page === 'player' ? 'block' : 'none' ?>">
+            <?php 
+            $page = 'player';
             include 'views/partials/header.php';
             include 'views/player.php';
             include 'views/partials/footer.php';
-            break;
-        case 'docs':
-            // Include header for non-home pages
+            ?>
+        </div>
+        
+        <!-- Docs Page -->
+        <div id="page-docs" class="spa-page" style="display: <?= $page === 'docs' ? 'block' : 'none' ?>">
+            <?php
+            $page = 'docs';
             include 'views/partials/header.php';
             include 'views/docs.php';
             include 'views/partials/footer.php';
-            break;
-        case 'home':
-        default:
-            // Home page has header/footer embedded in the content
-            include 'views/home.php';
-            break;
-    }
-    ?>
+            ?>
+        </div>
+    </div>
+    
+    <script>
+    // Simple SPA navigation
+    document.addEventListener('DOMContentLoaded', function() {
+        const pages = document.querySelectorAll('.spa-page');
+        
+        // Handle all navigation links
+        document.addEventListener('click', function(e) {
+            const link = e.target.closest('a[href^="?page="]');
+            if (link) {
+                e.preventDefault();
+                const url = new URL(link.href);
+                const pageName = url.searchParams.get('page') || 'home';
+                navigateToPage(pageName);
+            }
+        });
+        
+        // Navigate to a specific page
+        function navigateToPage(pageName) {
+            // Hide all pages
+            pages.forEach(page => page.style.display = 'none');
+            
+            // Show target page
+            const targetPage = document.getElementById('page-' + pageName);
+            if (targetPage) {
+                targetPage.style.display = 'block';
+                
+                // Update URL without reload
+                const newUrl = pageName === 'home' ? '/' : '?page=' + pageName;
+                history.pushState({page: pageName}, '', newUrl);
+            }
+        }
+        
+        // Handle browser back/forward
+        window.addEventListener('popstate', function(e) {
+            const pageName = e.state?.page || 'home';
+            pages.forEach(page => page.style.display = 'none');
+            const targetPage = document.getElementById('page-' + pageName);
+            if (targetPage) targetPage.style.display = 'block';
+        });
+        
+        // Set initial state
+        const initialPage = new URLSearchParams(window.location.search).get('page') || 'home';
+        history.replaceState({page: initialPage}, '', window.location.href);
+    });
+    </script>
 </body>
 </html>
