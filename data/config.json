@@ -15,7 +15,8 @@
   "navigation": {
     "welcome_text": "Welcome",
     "player_text": "Player",
-    "docs_text": "Docs"
+    "docs_text": "Docs",
+    "content_text": "Conteúdo"
   },
   "social": {
     "telegram_url": "https://t.me/+vidlinkpro",
@@ -53,6 +54,10 @@
   "settings": {
     "favicon": "complete/resources/image_1.ico",
     "player_embed_base": "https://vidlink.pro/movie/94997"
+  },
+  "catalog": {
+    "grid_columns": 8,
+    "items_per_page": 64
   },
   "tv_channels": [
     {
