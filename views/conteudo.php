@@ -12,20 +12,37 @@ $embed_base = isset($config['settings']['player_embed_base'])
 // Get catalog configuration
 $grid_columns = $config['catalog']['grid_columns'] ?? 8;
 $items_per_page = $config['catalog']['items_per_page'] ?? 64;
+
+// Get content tabs from config
+$content_tabs = $config['content_tabs'] ?? [];
+// Filter enabled tabs and sort by order
+$enabled_tabs = array_filter($content_tabs, function($tab) {
+    return $tab['enabled'] ?? true;
+});
+usort($enabled_tabs, function($a, $b) {
+    return ($a['order'] ?? 999) - ($b['order'] ?? 999);
+});
 ?>
 <div class="flex flex-col items-center justify-center w-full" style="margin-top: 120px;">
     <div class="flex max-w-[70rem] flex-col items-center w-full h-full min-h-screen gap-2 p-4">
         <main id="ContentCatalog" class="flex max-w-[70rem] flex-col items-center w-full h-full min-h-screen gap-2 p-4 bg-gray-900 text-white">
-            <!-- Sub-tabs for Movies and Series -->
+            <!-- Sub-tabs for Movies and Series (Dynamic) -->
             <div class="flex p-1 h-fit gap-2 items-center flex-nowrap overflow-x-scroll scrollbar-hide bg-black/20 rounded-full new">
-                <button id="tab-filmes" class="tab-button group" data-selected="true" data-category="movie">
+                <?php 
+                $first_tab = true;
+                foreach ($enabled_tabs as $tab): 
+                    $tab_id = htmlspecialchars($tab['id']);
+                    $tab_name = htmlspecialchars($tab['name']);
+                    $category = htmlspecialchars($tab['category'] ?? $tab['id']);
+                ?>
+                <button id="tab-<?= $tab_id ?>" class="tab-button group" data-selected="<?= $first_tab ? 'true' : 'false' ?>" data-category="<?= $category ?>" data-tab-config='<?= htmlspecialchars(json_encode($tab), ENT_QUOTES, 'UTF-8') ?>'>
                     <span class="cursor-pill"></span>
-                    <span class="relative z-10">Filmes</span>
+                    <span class="relative z-10"><?= $tab_name ?></span>
                 </button>
-                <button id="tab-series" class="tab-button group" data-selected="false" data-category="serie">
-                    <span class="cursor-pill"></span>
-                    <span class="relative z-10">Séries</span>
-                </button>
+                <?php 
+                    $first_tab = false;
+                endforeach; 
+                ?>
             </div>
 
             <!-- Catalog Container -->
@@ -212,23 +229,22 @@ document.addEventListener('DOMContentLoaded', function() {
     // Configuration
     const TMDB_API_KEY = '<?= htmlspecialchars($tmdb_api_key) ?>';
     const EMBED_BASE_URL = '<?= htmlspecialchars($embed_base) ?>';
-    const API_BASE_URL_FILMES = 'api/proxy.php?category=movie&type=tmdb&format=json&order=desc';
-    const API_BASE_URL_SERIES = 'api/proxy.php?category=serie&type=tmdb&format=json&order=desc';
     const TMDB_API_BASE = 'https://api.themoviedb.org/3';
     const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p/w342';
     const ITEMS_PER_PAGE = <?= $items_per_page ?>;
     const MAX_PAGE_BUTTONS = 6;
+    const TV_CHANNELS = <?= json_encode($config['tv_channels'] ?? []) ?>;
 
     // State
     let allItemIds = [];
     let currentCategory = 'movie';
+    let currentTabConfig = null;
     let currentPage = 1;
     let totalPages = 1;
     let isLoading = false;
 
     // DOM Elements
-    const tabFilmes = document.getElementById('tab-filmes');
-    const tabSeries = document.getElementById('tab-series');
+    const tabButtons = document.querySelectorAll('.tab-button');
     const loadingIndicator = document.getElementById('loading-indicator');
     const errorMessage = document.getElementById('error-message');
     const errorText = document.getElementById('error-text');
@@ -260,36 +276,75 @@ document.addEventListener('DOMContentLoaded', function() {
     function handleTabClick(event) {
         const selectedTab = event.currentTarget;
         const category = selectedTab.dataset.category;
-        if (category === currentCategory || isLoading) return;
+        const tabConfigStr = selectedTab.dataset.tabConfig;
+        
+        if (!tabConfigStr || isLoading) return;
+        
+        try {
+            const tabConfig = JSON.parse(tabConfigStr);
+            
+            // Don't reload if same tab
+            if (currentTabConfig && currentTabConfig.id === tabConfig.id) return;
+            
+            currentTabConfig = tabConfig;
+            currentCategory = category;
+            currentPage = 1;
 
-        currentCategory = category;
-        currentPage = 1;
+            // Update all tab selected states
+            tabButtons.forEach(btn => {
+                btn.setAttribute('data-selected', 'false');
+            });
+            selectedTab.setAttribute('data-selected', 'true');
 
-        tabFilmes.setAttribute('data-selected', category === 'movie');
-        tabSeries.setAttribute('data-selected', category === 'serie');
-
-        loadAllItemIds();
+            loadAllItemIds();
+        } catch (e) {
+            console.error('Error parsing tab config:', e);
+        }
     }
 
     async function loadAllItemIds() {
         showLoading(true);
         allItemIds = [];
 
-        const url = (currentCategory === 'movie') ? API_BASE_URL_FILMES : API_BASE_URL_SERIES;
+        if (!currentTabConfig) {
+            showError('Nenhuma aba selecionada.');
+            return;
+        }
 
         try {
-            const response = await fetch(url);
-            if (!response.ok) {
-                throw new Error(`Erro na API: ${response.statusText}`);
-            }
-
-            const data = await response.json();
-            if (Array.isArray(data) && data.length > 0) {
-                allItemIds = data;
-                totalPages = Math.ceil(allItemIds.length / ITEMS_PER_PAGE);
-                await loadCatalogPage();
+            // Check if this is a config-based tab (like TV channels)
+            if (currentTabConfig.type === 'config') {
+                // Load from config data
+                if (currentTabConfig.source === 'tv_channels') {
+                    allItemIds = TV_CHANNELS.map((ch, idx) => ({
+                        ...ch,
+                        _index: idx,
+                        _isConfigData: true
+                    }));
+                }
+                
+                if (allItemIds.length > 0) {
+                    totalPages = Math.ceil(allItemIds.length / ITEMS_PER_PAGE);
+                    await loadCatalogPage();
+                } else {
+                    showError('Nenhum item encontrado na configuração.');
+                }
             } else {
-                showError('A API retornou uma lista vazia.');
+                // Load from API
+                const url = currentTabConfig.source;
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`Erro na API: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                if (Array.isArray(data) && data.length > 0) {
+                    allItemIds = data;
+                    totalPages = Math.ceil(allItemIds.length / ITEMS_PER_PAGE);
+                    await loadCatalogPage();
+                } else {
+                    showError('A API retornou uma lista vazia.');
+                }
             }
         } catch (error) {
             console.error('Erro ao buscar IDs:', error);
@@ -310,10 +365,19 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        const fetchPromises = pageItemIds.map(id => fetchItemDetails(id));
-
         try {
-            const items = await Promise.all(fetchPromises);
+            let items = [];
+            
+            // Check if this is config data (like TV channels)
+            if (pageItemIds[0] && pageItemIds[0]._isConfigData) {
+                // These are already full objects, no need to fetch
+                items = pageItemIds;
+            } else {
+                // Fetch from TMDB
+                const fetchPromises = pageItemIds.map(id => fetchItemDetails(id));
+                items = await Promise.all(fetchPromises);
+            }
+
             catalogGrid.innerHTML = '';
 
             items.forEach(item => {
@@ -327,8 +391,8 @@ document.addEventListener('DOMContentLoaded', function() {
             updatePaginationControls();
             paginationControls.classList.remove('hidden');
         } catch (error) {
-            console.error('Erro ao buscar detalhes no TMDB:', error);
-            showError('Erro ao buscar detalhes dos itens no TMDB.');
+            console.error('Erro ao buscar detalhes:', error);
+            showError('Erro ao buscar detalhes dos itens.');
         } finally {
             showLoading(false);
         }
@@ -356,9 +420,16 @@ document.addEventListener('DOMContentLoaded', function() {
         card.className = 'poster-card';
 
         const title = item.title || item.name;
-        const posterPath = item.poster_path 
-            ? `${TMDB_IMAGE_BASE}${item.poster_path}` 
-            : 'https://placehold.co/342x513/1F2937/FFFFFF?text=Sem+Imagem';
+        let posterPath;
+        
+        // Check if this is config data (like TV channels)
+        if (item._isConfigData) {
+            posterPath = item.poster || (currentTabConfig?.default_poster) || 'https://placehold.co/342x513/1F2937/FFFFFF?text=TV';
+        } else {
+            posterPath = item.poster_path 
+                ? `${TMDB_IMAGE_BASE}${item.poster_path}` 
+                : 'https://placehold.co/342x513/1F2937/FFFFFF?text=Sem+Imagem';
+        }
 
         // Create elements safely to prevent XSS
         const img = document.createElement('img');
@@ -489,12 +560,25 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Event Listeners
-    tabFilmes.addEventListener('click', handleTabClick);
-    tabSeries.addEventListener('click', handleTabClick);
+    tabButtons.forEach(btn => {
+        btn.addEventListener('click', handleTabClick);
+    });
     prevPageBtn.addEventListener('click', goToPrevPage);
     nextPageBtn.addEventListener('click', goToNextPage);
 
-    // Initial load
-    loadAllItemIds();
+    // Initial load - trigger first tab
+    if (tabButtons.length > 0) {
+        const firstTab = tabButtons[0];
+        const tabConfigStr = firstTab.dataset.tabConfig;
+        if (tabConfigStr) {
+            try {
+                currentTabConfig = JSON.parse(tabConfigStr);
+                currentCategory = firstTab.dataset.category;
+                loadAllItemIds();
+            } catch (e) {
+                console.error('Error loading initial tab:', e);
+            }
+        }
+    }
 });
 </script>
