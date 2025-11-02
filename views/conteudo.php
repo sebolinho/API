@@ -103,7 +103,7 @@ $items_per_page = $config['catalog']['items_per_page'] ?? 64;
     }
     @media (min-width: 768px) {
         .catalog-grid-layout {
-            grid-template-columns: repeat(4, minmax(0, 1fr));
+            grid-template-columns: repeat(5, minmax(0, 1fr));
         }
     }
     @media (min-width: 1024px) {
@@ -141,41 +141,43 @@ $items_per_page = $config['catalog']['items_per_page'] ?? 64;
         background: linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.8) 100%);
         display: flex;
         flex-direction: column;
-        justify-content: flex-end;
+        justify-content: center;
+        align-items: center;
         padding: 16px;
         opacity: 0;
         transition: opacity 0.3s ease;
+        pointer-events: none;
     }
     .poster-card:hover .poster-card-overlay {
         opacity: 1;
+        pointer-events: auto;
     }
     .poster-card-title {
-        font-size: 0.875rem;
-        font-weight: 600;
-        color: white;
-        margin-bottom: 12px;
-        line-height: 1.3;
+        display: none; /* Hide the title */
     }
     .poster-card-actions {
         display: flex;
         flex-direction: column;
-        gap: 6px;
+        gap: 8px;
+        width: 100%;
+        max-width: 200px;
     }
     .poster-card-action-btn {
         width: 100%;
-        background-color: rgba(75, 85, 99, 0.9);
+        background-color: rgba(147, 51, 234, 0.9);
         color: white;
         font-weight: 500;
-        padding: 8px;
-        border-radius: 6px;
+        padding: 10px 12px;
+        border-radius: 8px;
         text-align: center;
-        transition: background-color 0.2s;
-        font-size: 0.75rem;
+        transition: all 0.2s;
+        font-size: 0.875rem;
         border: none;
         cursor: pointer;
     }
     .poster-card-action-btn:hover {
-        background-color: rgba(107, 114, 128, 0.9);
+        background-color: rgba(168, 85, 247, 0.9);
+        transform: translateY(-2px);
     }
 
     /* Page number button styles */
@@ -368,10 +370,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const overlay = document.createElement('div');
         overlay.className = 'poster-card-overlay';
 
-        const titleEl = document.createElement('h3');
-        titleEl.className = 'poster-card-title';
-        titleEl.textContent = title;
-
         const actionsDiv = document.createElement('div');
         actionsDiv.className = 'poster-card-actions';
 
@@ -424,7 +422,6 @@ document.addEventListener('DOMContentLoaded', function() {
         actionsDiv.appendChild(copyLinkBtn);
         actionsDiv.appendChild(copyTmdbBtn);
 
-        overlay.appendChild(titleEl);
         overlay.appendChild(actionsDiv);
 
         card.appendChild(img);

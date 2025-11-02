@@ -148,9 +148,12 @@ if (isset($_POST['save']) && isset($_SESSION['admin_logged_in'])) {
     ];
     
     // Update catalog settings
+    $grid_columns = intval($_POST['catalog_grid_columns'] ?? 8);
+    $grid_rows = intval($_POST['catalog_grid_rows'] ?? 8);
     $config['catalog'] = [
-        'grid_columns' => intval($_POST['catalog_grid_columns'] ?? 8),
-        'items_per_page' => intval($_POST['catalog_items_per_page'] ?? 64)
+        'grid_columns' => $grid_columns,
+        'grid_rows' => $grid_rows,
+        'items_per_page' => $grid_columns * $grid_rows
     ];
     
     // Preserve TV channels and modules (handled separately)
@@ -995,17 +998,22 @@ $config = Config::load();
                     <div class="grid-2">
                         <div class="form-group">
                             <label>Grid Columns</label>
-                            <input type="number" name="catalog_grid_columns" value="<?= htmlspecialchars($config['catalog']['grid_columns'] ?? 8) ?>" min="1" max="12" placeholder="8">
+                            <input type="number" name="catalog_grid_columns" id="catalog_grid_columns" value="<?= htmlspecialchars($config['catalog']['grid_columns'] ?? 8) ?>" min="1" max="12" placeholder="8" onchange="updateItemsPerPage()">
                             <small style="color: #888;">Number of columns in the grid (1-12). Default: 8</small>
                         </div>
                         <div class="form-group">
-                            <label>Items Per Page</label>
-                            <input type="number" name="catalog_items_per_page" value="<?= htmlspecialchars($config['catalog']['items_per_page'] ?? 64) ?>" min="12" max="200" step="4" placeholder="64">
-                            <small style="color: #888;">Total items per page. Default: 64 (8×8 grid)</small>
+                            <label>Grid Rows</label>
+                            <input type="number" name="catalog_grid_rows" id="catalog_grid_rows" value="<?= htmlspecialchars($config['catalog']['grid_rows'] ?? 8) ?>" min="1" max="20" placeholder="8" onchange="updateItemsPerPage()">
+                            <small style="color: #888;">Number of rows per page (1-20). Default: 8</small>
                         </div>
                     </div>
+                    <div class="form-group">
+                        <label>Items Per Page (Auto-calculated)</label>
+                        <input type="number" id="catalog_items_display" value="<?= htmlspecialchars($config['catalog']['items_per_page'] ?? 64) ?>" readonly style="background: #f5f5f5; cursor: not-allowed;">
+                        <small style="color: #888;">Automatically calculated as Columns × Rows</small>
+                    </div>
                     <div style="margin-top: 1.5rem; padding: 1rem; background: #e3f2fd; border-radius: 5px; border-left: 4px solid #2196f3;">
-                        <p style="margin: 0; color: #1976d2;"><strong>💡 Tip:</strong> For best results, set Items Per Page to Grid Columns × desired number of rows. Example: 8 columns × 8 rows = 64 items per page.</p>
+                        <p style="margin: 0; color: #1976d2;"><strong>💡 Tip:</strong> Items per page is automatically calculated based on columns × rows. For example, 8 columns × 8 rows = 64 items per page.</p>
                     </div>
                     <div style="margin-top: 1rem; padding: 1rem; background: #fff3cd; border-radius: 5px; border-left: 4px solid #ffc107;">
                         <p style="margin: 0; color: #856404;"><strong>⚠️ Note:</strong> Changes take effect immediately on the Content page. Larger values may affect loading performance.</p>
@@ -1268,6 +1276,13 @@ $config = Config::load();
     </div>
     
     <script>
+        // Auto-calculate items per page
+        function updateItemsPerPage() {
+            const columns = parseInt(document.getElementById('catalog_grid_columns').value) || 8;
+            const rows = parseInt(document.getElementById('catalog_grid_rows').value) || 8;
+            document.getElementById('catalog_items_display').value = columns * rows;
+        }
+        
         function showTab(tabName) {
             // Hide all tabs
             document.querySelectorAll('.tab-content').forEach(tab => {

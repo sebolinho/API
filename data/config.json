@@ -57,8 +57,28 @@
   },
   "catalog": {
     "grid_columns": 8,
+    "grid_rows": 8,
     "items_per_page": 64
   },
+  "content_tabs": [
+    {
+      "id": "movies",
+      "name": "Filmes",
+      "data_source_type": "api",
+      "data_source": "api/proxy.php?category=movie&type=tmdb&format=json&order=desc",
+      "category": "movie",
+      "default_poster": ""
+    },
+    {
+      "id": "series",
+      "name": "Séries",
+      "data_source_type": "api",
+      "data_source": "api/proxy.php?category=serie&type=tmdb&format=json&order=desc",
+      "category": "serie",
+      "default_poster": ""
+    }
+  ],
+  "navigation_order": ["home", "player", "docs", "conteudo"],
   "tv_channels": [
     {
       "id": "1",
