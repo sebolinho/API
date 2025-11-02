@@ -16,7 +16,41 @@
     "welcome_text": "Welcome",
     "player_text": "Player",
     "docs_text": "Docs",
-    "content_text": "Conteúdo"
+    "content_text": "Conteúdo",
+    "links": [
+      {
+        "id": "home",
+        "text": "Welcome",
+        "page": "home",
+        "icon": "home",
+        "order": 1,
+        "enabled": true
+      },
+      {
+        "id": "player",
+        "text": "Player",
+        "page": "player",
+        "icon": "play",
+        "order": 2,
+        "enabled": true
+      },
+      {
+        "id": "docs",
+        "text": "Docs",
+        "page": "docs",
+        "icon": "book",
+        "order": 3,
+        "enabled": true
+      },
+      {
+        "id": "conteudo",
+        "text": "Conteúdo",
+        "page": "conteudo",
+        "icon": "content",
+        "order": 4,
+        "enabled": true
+      }
+    ]
   },
   "social": {
     "telegram_url": "https://t.me/+vidlinkpro",
@@ -57,8 +91,38 @@
   },
   "catalog": {
     "grid_columns": 8,
+    "grid_rows": 8,
     "items_per_page": 64
   },
+  "content_tabs": [
+    {
+      "id": "movies",
+      "name": "Filmes",
+      "type": "api",
+      "source": "api/proxy.php?category=movie&type=tmdb&format=json&order=desc",
+      "category": "movie",
+      "enabled": true,
+      "order": 1
+    },
+    {
+      "id": "series",
+      "name": "Séries",
+      "type": "api",
+      "source": "api/proxy.php?category=serie&type=tmdb&format=json&order=desc",
+      "category": "serie",
+      "enabled": true,
+      "order": 2
+    },
+    {
+      "id": "tv_channels",
+      "name": "Canais de TV",
+      "type": "config",
+      "source": "tv_channels",
+      "default_poster": "https://placehold.co/342x513/1F2937/FFFFFF?text=TV",
+      "enabled": false,
+      "order": 3
+    }
+  ],
   "tv_channels": [
     {
       "id": "1",
