@@ -156,12 +156,18 @@ if (isset($_POST['save']) && isset($_SESSION['admin_logged_in'])) {
         'items_per_page' => $grid_columns * $grid_rows
     ];
     
-    // Preserve TV channels and modules (handled separately)
+    // Preserve TV channels, modules, content_tabs, and navigation_order (handled separately)
     if (!isset($config['tv_channels'])) {
         $config['tv_channels'] = [];
     }
     if (!isset($config['modules'])) {
         $config['modules'] = [];
+    }
+    if (!isset($config['content_tabs'])) {
+        $config['content_tabs'] = [];
+    }
+    if (!isset($config['navigation_order'])) {
+        $config['navigation_order'] = ['home', 'player', 'docs', 'conteudo'];
     }
     
     Config::save($config);
@@ -171,6 +177,51 @@ if (isset($_POST['save']) && isset($_SESSION['admin_logged_in'])) {
 // Handle TV channel management
 if (isset($_SESSION['admin_logged_in'])) {
     $config = Config::load();
+    
+    // Add content tab
+    if (isset($_POST['add_content_tab'])) {
+        $tab_id = $_POST['tab_id'] ?? '';
+        $tab_name = $_POST['tab_name'] ?? '';
+        $data_source_type = $_POST['data_source_type'] ?? 'api';
+        $data_source = $_POST['data_source'] ?? '';
+        $category = $_POST['tab_category'] ?? '';
+        $default_poster = $_POST['default_poster'] ?? '';
+        
+        if (!empty($tab_id) && !empty($tab_name) && !empty($data_source)) {
+            if (!isset($config['content_tabs'])) {
+                $config['content_tabs'] = [];
+            }
+            
+            $config['content_tabs'][] = [
+                'id' => $tab_id,
+                'name' => $tab_name,
+                'data_source_type' => $data_source_type,
+                'data_source' => $data_source,
+                'category' => $category,
+                'default_poster' => $default_poster
+            ];
+            
+            Config::save($config);
+            $tab_success = 'Content tab added successfully!';
+        } else {
+            $tab_error = 'Tab ID, name, and data source are required!';
+        }
+    }
+    
+    // Delete content tab
+    if (isset($_POST['delete_content_tab'])) {
+        $tab_id = $_POST['tab_id'] ?? '';
+        
+        if (!empty($tab_id) && isset($config['content_tabs'])) {
+            $config['content_tabs'] = array_filter($config['content_tabs'], function($tab) use ($tab_id) {
+                return $tab['id'] !== $tab_id;
+            });
+            $config['content_tabs'] = array_values($config['content_tabs']); // Re-index array
+            
+            Config::save($config);
+            $tab_success = 'Content tab deleted successfully!';
+        }
+    }
     
     // Add channel
     if (isset($_POST['add_channel'])) {
@@ -637,6 +688,7 @@ $config = Config::load();
             <button class="tab-btn" onclick="showTab('tmdb')">🎬 TMDB API</button>
             <button class="tab-btn" onclick="showTab('settings')">⚙️ Settings</button>
             <button class="tab-btn" onclick="showTab('catalog')">📚 Catalog</button>
+            <button class="tab-btn" onclick="showTab('contenttabs')">🗂️ Content Tabs</button>
             <button class="tab-btn" onclick="showTab('modules')">🎛️ Modules</button>
             <button class="tab-btn" onclick="showTab('tvchannels')">📺 TV Channels</button>
             <?php if (isset($_SESSION['admin_role']) && isset($_SESSION['admin_role']) && $_SESSION['admin_role'] === 'administrator'): ?>
@@ -1024,6 +1076,91 @@ $config = Config::load();
             <button type="submit" name="save" class="save-btn">💾 Save All Changes</button>
         </form>
         
+        <!-- Content Tabs Tab (Separate form) -->
+        <div id="contenttabs" class="tab-content" style="background: white; padding: 2rem; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); display: none;">
+            <div class="form-section">
+                <h3>Content Tabs Management</h3>
+                <p style="color: #888; margin-bottom: 1.5rem;">Manage dynamic tabs on the Content page. Tabs can pull data from external APIs or from config.json.</p>
+                
+                <?php if (isset($tab_success)): ?>
+                    <div class="success"><?= htmlspecialchars($tab_success) ?></div>
+                <?php endif; ?>
+                <?php if (isset($tab_error)): ?>
+                    <div class="error" style="background: #fee; color: #c33; padding: 0.75rem; border-radius: 5px; margin-bottom: 1rem;"><?= htmlspecialchars($tab_error) ?></div>
+                <?php endif; ?>
+                
+                <h4 style="margin: 1.5rem 0 1rem; color: #764ba2;">Add New Content Tab</h4>
+                <form method="POST" style="background: #f9f9f9; padding: 1.5rem; border-radius: 5px; margin-bottom: 2rem;">
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label>Tab ID (slug)</label>
+                            <input type="text" name="tab_id" required placeholder="e.g., tv-channels">
+                            <small style="color: #888;">Unique identifier (lowercase, use hyphens)</small>
+                        </div>
+                        <div class="form-group">
+                            <label>Tab Name</label>
+                            <input type="text" name="tab_name" required placeholder="e.g., Canais de TV">
+                            <small style="color: #888;">Display name for the tab</small>
+                        </div>
+                        <div class="form-group">
+                            <label>Data Source Type</label>
+                            <select name="data_source_type" id="data_source_type" style="width: 100%; padding: 0.75rem; border: 2px solid #e1e8ed; border-radius: 5px; font-size: 1rem;" onchange="updateDataSourceHelp()">
+                                <option value="api">External API</option>
+                                <option value="config">Config.json Data</option>
+                            </select>
+                            <small style="color: #888;">Where to fetch content from</small>
+                        </div>
+                        <div class="form-group">
+                            <label>Data Source</label>
+                            <input type="text" name="data_source" id="data_source" required placeholder="api/proxy.php?category=movie...">
+                            <small style="color: #888;" id="data_source_help">API URL or config.json key (e.g., tv_channels)</small>
+                        </div>
+                        <div class="form-group">
+                            <label>Category (for API sources)</label>
+                            <input type="text" name="tab_category" placeholder="e.g., movie, serie, tv">
+                            <small style="color: #888;">Used for generating embed URLs (optional)</small>
+                        </div>
+                        <div class="form-group">
+                            <label>Default Poster URL</label>
+                            <input type="url" name="default_poster" placeholder="https://example.com/default-poster.jpg">
+                            <small style="color: #888;">Fallback image for items without posters</small>
+                        </div>
+                    </div>
+                    <button type="submit" name="add_content_tab" style="background: #28a745; color: white; padding: 0.75rem 1.5rem; border: none; border-radius: 5px; font-weight: 600; cursor: pointer; margin-top: 1rem;">➕ Add Tab</button>
+                </form>
+                
+                <h4 style="margin: 1.5rem 0 1rem; color: #764ba2;">Existing Content Tabs</h4>
+                <?php 
+                $content_tabs_list = $config['content_tabs'] ?? [];
+                if (empty($content_tabs_list)): ?>
+                    <p style="color: #888; padding: 2rem; text-align: center; background: #f9f9f9; border-radius: 5px;">No content tabs configured. Add your first tab above!</p>
+                <?php else: ?>
+                <div style="display: grid; gap: 1rem;">
+                    <?php foreach ($content_tabs_list as $tab): ?>
+                    <div style="background: #f9f9f9; padding: 1.5rem; border-radius: 10px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <h4 style="margin: 0; color: #333;"><?= htmlspecialchars($tab['name']) ?></h4>
+                            <p style="margin: 0.5rem 0 0; color: #888; font-size: 0.875rem;">
+                                <strong>ID:</strong> <?= htmlspecialchars($tab['id']) ?> | 
+                                <strong>Type:</strong> <?= htmlspecialchars($tab['data_source_type']) ?> | 
+                                <strong>Source:</strong> <?= htmlspecialchars(strlen($tab['data_source']) > 50 ? substr($tab['data_source'], 0, 50) . '...' : $tab['data_source']) ?>
+                            </p>
+                        </div>
+                        <form method="POST" style="margin: 0;" onsubmit="return confirm('Delete this tab?');">
+                            <input type="hidden" name="tab_id" value="<?= htmlspecialchars($tab['id']) ?>">
+                            <button type="submit" name="delete_content_tab" style="padding: 0.5rem 1rem; border-radius: 5px; border: none; cursor: pointer; font-weight: 600; background: #dc3545; color: white;">🗑️ Delete</button>
+                        </form>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+                <?php endif; ?>
+                
+                <div style="margin-top: 2rem; padding: 1rem; background: #e3f2fd; border-radius: 5px; border-left: 4px solid #2196f3;">
+                    <p style="margin: 0; color: #1976d2;"><strong>💡 Example:</strong> To create a "TV Channels" tab pulling from config.json, use data source type "Config.json Data" and enter "tv_channels" as the data source.</p>
+                </div>
+            </div>
+        </div>
+        
         <!-- Modules Tab (Separate) -->
         <div id="modules" class="tab-content" style="background: white; padding: 2rem; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); display: none;">
             <div class="form-section">
@@ -1281,6 +1418,23 @@ $config = Config::load();
             const columns = parseInt(document.getElementById('catalog_grid_columns').value) || 8;
             const rows = parseInt(document.getElementById('catalog_grid_rows').value) || 8;
             document.getElementById('catalog_items_display').value = columns * rows;
+        }
+        
+        // Update data source input help text
+        function updateDataSourceHelp() {
+            const sourceType = document.getElementById('data_source_type')?.value;
+            const helpText = document.getElementById('data_source_help');
+            const dataSourceInput = document.getElementById('data_source');
+            
+            if (helpText && dataSourceInput) {
+                if (sourceType === 'api') {
+                    helpText.textContent = 'Full API URL (e.g., api/proxy.php?category=movie&type=tmdb&format=json&order=desc)';
+                    dataSourceInput.placeholder = 'api/proxy.php?category=movie...';
+                } else {
+                    helpText.textContent = 'Config.json key name (e.g., tv_channels)';
+                    dataSourceInput.placeholder = 'tv_channels';
+                }
+            }
         }
         
         function showTab(tabName) {

@@ -12,20 +12,29 @@ $embed_base = isset($config['settings']['player_embed_base'])
 // Get catalog configuration
 $grid_columns = $config['catalog']['grid_columns'] ?? 8;
 $items_per_page = $config['catalog']['items_per_page'] ?? 64;
+$content_tabs = $config['content_tabs'] ?? [
+    ['id' => 'movies', 'name' => 'Filmes', 'data_source_type' => 'api', 'data_source' => 'api/proxy.php?category=movie&type=tmdb&format=json&order=desc', 'category' => 'movie'],
+    ['id' => 'series', 'name' => 'Séries', 'data_source_type' => 'api', 'data_source' => 'api/proxy.php?category=serie&type=tmdb&format=json&order=desc', 'category' => 'serie']
+];
 ?>
 <div class="flex flex-col items-center justify-center w-full" style="margin-top: 120px;">
     <div class="flex max-w-[70rem] flex-col items-center w-full h-full min-h-screen gap-2 p-4">
         <main id="ContentCatalog" class="flex max-w-[70rem] flex-col items-center w-full h-full min-h-screen gap-2 p-4 bg-gray-900 text-white">
-            <!-- Sub-tabs for Movies and Series -->
+            <!-- Dynamic Content Tabs -->
             <div class="flex p-1 h-fit gap-2 items-center flex-nowrap overflow-x-scroll scrollbar-hide bg-black/20 rounded-full new">
-                <button id="tab-filmes" class="tab-button group" data-selected="true" data-category="movie">
+                <?php foreach ($content_tabs as $index => $tab): ?>
+                <button id="tab-<?= htmlspecialchars($tab['id']) ?>" 
+                        class="tab-button group" 
+                        data-selected="<?= $index === 0 ? 'true' : 'false' ?>" 
+                        data-tab-id="<?= htmlspecialchars($tab['id']) ?>"
+                        data-category="<?= htmlspecialchars($tab['category'] ?? '') ?>"
+                        data-source-type="<?= htmlspecialchars($tab['data_source_type']) ?>"
+                        data-source="<?= htmlspecialchars($tab['data_source']) ?>"
+                        data-default-poster="<?= htmlspecialchars($tab['default_poster'] ?? '') ?>">
                     <span class="cursor-pill"></span>
-                    <span class="relative z-10">Filmes</span>
+                    <span class="relative z-10"><?= htmlspecialchars($tab['name']) ?></span>
                 </button>
-                <button id="tab-series" class="tab-button group" data-selected="false" data-category="serie">
-                    <span class="cursor-pill"></span>
-                    <span class="relative z-10">Séries</span>
-                </button>
+                <?php endforeach; ?>
             </div>
 
             <!-- Catalog Container -->
@@ -211,23 +220,26 @@ document.addEventListener('DOMContentLoaded', function() {
     // Configuration
     const TMDB_API_KEY = '<?= htmlspecialchars($tmdb_api_key) ?>';
     const EMBED_BASE_URL = '<?= htmlspecialchars($embed_base) ?>';
-    const API_BASE_URL_FILMES = 'api/proxy.php?category=movie&type=tmdb&format=json&order=desc';
-    const API_BASE_URL_SERIES = 'api/proxy.php?category=serie&type=tmdb&format=json&order=desc';
     const TMDB_API_BASE = 'https://api.themoviedb.org/3';
     const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p/w342';
     const ITEMS_PER_PAGE = <?= $items_per_page ?>;
     const MAX_PAGE_BUTTONS = 6;
 
+    // Tab configuration
+    const contentTabs = <?= json_encode($content_tabs) ?>;
+    
     // State
     let allItemIds = [];
-    let currentCategory = 'movie';
+    let allItems = [];
+    let currentTabId = contentTabs[0]?.id || 'movies';
+    let currentTab = contentTabs[0] || {};
+    let currentCategory = currentTab.category || 'movie';
     let currentPage = 1;
     let totalPages = 1;
     let isLoading = false;
 
-    // DOM Elements
-    const tabFilmes = document.getElementById('tab-filmes');
-    const tabSeries = document.getElementById('tab-series');
+    // DOM Elements - get all tab buttons dynamically
+    const tabButtons = document.querySelectorAll('.tab-button');
     const loadingIndicator = document.getElementById('loading-indicator');
     const errorMessage = document.getElementById('error-message');
     const errorText = document.getElementById('error-text');
@@ -258,14 +270,19 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function handleTabClick(event) {
         const selectedTab = event.currentTarget;
-        const category = selectedTab.dataset.category;
-        if (category === currentCategory || isLoading) return;
+        const tabId = selectedTab.dataset.tabId;
+        
+        if (tabId === currentTabId || isLoading) return;
 
-        currentCategory = category;
+        currentTabId = tabId;
+        currentTab = contentTabs.find(t => t.id === tabId) || {};
+        currentCategory = currentTab.category || 'movie';
         currentPage = 1;
 
-        tabFilmes.setAttribute('data-selected', category === 'movie');
-        tabSeries.setAttribute('data-selected', category === 'serie');
+        // Update all tab buttons
+        tabButtons.forEach(btn => {
+            btn.setAttribute('data-selected', btn.dataset.tabId === tabId ? 'true' : 'false');
+        });
 
         loadAllItemIds();
     }
@@ -273,26 +290,48 @@ document.addEventListener('DOMContentLoaded', function() {
     async function loadAllItemIds() {
         showLoading(true);
         allItemIds = [];
+        allItems = [];
 
-        const url = (currentCategory === 'movie') ? API_BASE_URL_FILMES : API_BASE_URL_SERIES;
+        const dataSource = currentTab.data_source || '';
+        const sourceType = currentTab.data_source_type || 'api';
 
         try {
-            const response = await fetch(url);
-            if (!response.ok) {
-                throw new Error(`Erro na API: ${response.statusText}`);
-            }
+            if (sourceType === 'api') {
+                // Fetch from external API
+                const response = await fetch(dataSource);
+                if (!response.ok) {
+                    throw new Error(`Erro na API: ${response.statusText}`);
+                }
 
-            const data = await response.json();
-            if (Array.isArray(data) && data.length > 0) {
-                allItemIds = data;
-                totalPages = Math.ceil(allItemIds.length / ITEMS_PER_PAGE);
-                await loadCatalogPage();
-            } else {
-                showError('A API retornou uma lista vazia.');
+                const data = await response.json();
+                if (Array.isArray(data) && data.length > 0) {
+                    allItemIds = data;
+                    totalPages = Math.ceil(allItemIds.length / ITEMS_PER_PAGE);
+                    await loadCatalogPage();
+                } else {
+                    showError('A API retornou uma lista vazia.');
+                }
+            } else if (sourceType === 'config') {
+                // Load from config.json data
+                const response = await fetch('data/config.json');
+                if (!response.ok) {
+                    throw new Error(`Erro ao carregar config: ${response.statusText}`);
+                }
+                const config = await response.json();
+                const configKey = dataSource; // e.g., "tv_channels"
+                const data = config[configKey] || [];
+                
+                if (Array.isArray(data) && data.length > 0) {
+                    allItems = data; // Store items directly
+                    totalPages = Math.ceil(allItems.length / ITEMS_PER_PAGE);
+                    await loadCatalogPageFromConfig();
+                } else {
+                    showError('Não há dados disponíveis nesta categoria.');
+                }
             }
         } catch (error) {
-            console.error('Erro ao buscar IDs:', error);
-            showError(`Não foi possível buscar a lista de IDs. (Erro: ${error.message})`);
+            console.error('Erro ao buscar dados:', error);
+            showError(`Não foi possível buscar os dados. (Erro: ${error.message})`);
         }
     }
 
@@ -333,6 +372,46 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    async function loadCatalogPageFromConfig() {
+        showLoading(true);
+        catalogGrid.innerHTML = '';
+
+        const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+        const endIndex = startIndex + ITEMS_PER_PAGE;
+        const pageItems = allItems.slice(startIndex, endIndex);
+
+        if (pageItems.length === 0) {
+            showError('Não há mais itens para exibir.');
+            return;
+        }
+
+        try {
+            catalogGrid.innerHTML = '';
+
+            pageItems.forEach(item => {
+                // Convert config item to poster card format
+                const posterItem = {
+                    id: item.id || item.slug,
+                    title: item.name || item.title,
+                    name: item.name || item.title,
+                    poster_path: null, // Will use default poster
+                    _raw: item
+                };
+                const card = createPosterCard(posterItem, true);
+                catalogGrid.appendChild(card);
+            });
+
+            catalogGrid.classList.remove('hidden');
+            updatePaginationControls();
+            paginationControls.classList.remove('hidden');
+        } catch (error) {
+            console.error('Erro ao carregar itens:', error);
+            showError('Erro ao carregar itens.');
+        } finally {
+            showLoading(false);
+        }
+    }
+
     async function fetchItemDetails(id) {
         const type = (currentCategory === 'movie') ? 'movie' : 'tv';
         const url = `${TMDB_API_BASE}/${type}/${id}?api_key=${TMDB_API_KEY}&language=pt-BR`;
@@ -350,14 +429,21 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    function createPosterCard(item) {
+    function createPosterCard(item, isFromConfig = false) {
         const card = document.createElement('div');
         card.className = 'poster-card';
 
         const title = item.title || item.name;
-        const posterPath = item.poster_path 
-            ? `${TMDB_IMAGE_BASE}${item.poster_path}` 
-            : 'https://placehold.co/342x513/1F2937/FFFFFF?text=Sem+Imagem';
+        let posterPath;
+        
+        if (isFromConfig) {
+            // Use default poster for config items
+            posterPath = currentTab.default_poster || 'https://placehold.co/342x513/1F2937/FFFFFF?text=' + encodeURIComponent(title);
+        } else {
+            posterPath = item.poster_path 
+                ? `${TMDB_IMAGE_BASE}${item.poster_path}` 
+                : 'https://placehold.co/342x513/1F2937/FFFFFF?text=Sem+Imagem';
+        }
 
         // Create elements safely to prevent XSS
         const img = document.createElement('img');
@@ -379,7 +465,9 @@ document.addEventListener('DOMContentLoaded', function() {
         openBtn.textContent = 'Abrir Link';
         openBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            const url = getEmbedUrl(item.id, currentCategory);
+            const url = isFromConfig 
+                ? (item._raw?.url || getEmbedUrl(item.id, currentCategory))
+                : getEmbedUrl(item.id, currentCategory);
             window.open(url, '_blank');
         });
 
@@ -389,7 +477,9 @@ document.addEventListener('DOMContentLoaded', function() {
         copyLinkBtn.textContent = 'Copiar Link';
         copyLinkBtn.addEventListener('click', async (e) => {
             e.stopPropagation();
-            const url = getEmbedUrl(item.id, currentCategory);
+            const url = isFromConfig 
+                ? (item._raw?.url || getEmbedUrl(item.id, currentCategory))
+                : getEmbedUrl(item.id, currentCategory);
             try {
                 await navigator.clipboard.writeText(url);
                 copyLinkBtn.textContent = 'Link Copiado!';
@@ -401,17 +491,17 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-        // Copy TMDB ID button
-        const copyTmdbBtn = document.createElement('button');
-        copyTmdbBtn.className = 'poster-card-action-btn';
-        copyTmdbBtn.textContent = 'Copiar TMDB';
-        copyTmdbBtn.addEventListener('click', async (e) => {
+        // Copy ID button (TMDB or slug)
+        const copyIdBtn = document.createElement('button');
+        copyIdBtn.className = 'poster-card-action-btn';
+        copyIdBtn.textContent = isFromConfig ? 'Copiar ID' : 'Copiar TMDB';
+        copyIdBtn.addEventListener('click', async (e) => {
             e.stopPropagation();
             try {
                 await navigator.clipboard.writeText(item.id.toString());
-                copyTmdbBtn.textContent = 'ID Copiado!';
+                copyIdBtn.textContent = 'ID Copiado!';
                 setTimeout(() => {
-                    copyTmdbBtn.textContent = 'Copiar TMDB';
+                    copyIdBtn.textContent = isFromConfig ? 'Copiar ID' : 'Copiar TMDB';
                 }, 2000);
             } catch (err) {
                 console.error('Erro ao copiar:', err);
@@ -420,7 +510,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         actionsDiv.appendChild(openBtn);
         actionsDiv.appendChild(copyLinkBtn);
-        actionsDiv.appendChild(copyTmdbBtn);
+        actionsDiv.appendChild(copyIdBtn);
 
         overlay.appendChild(actionsDiv);
 
@@ -483,8 +573,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Event Listeners
-    tabFilmes.addEventListener('click', handleTabClick);
-    tabSeries.addEventListener('click', handleTabClick);
+    tabButtons.forEach(btn => {
+        btn.addEventListener('click', handleTabClick);
+    });
     prevPageBtn.addEventListener('click', goToPrevPage);
     nextPageBtn.addEventListener('click', goToNextPage);
 
