@@ -57,6 +57,7 @@
   },
   "catalog": {
     "grid_columns": 8,
+    "grid_rows": 8,
     "items_per_page": 64
   },
   "tv_channels": [

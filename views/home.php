@@ -49,8 +49,8 @@ function renderPosterColumns($posters, $startIndex, $count) {
         </div>
         </a>
     </div>
-    <nav class="flex-1 flex justify-center max-w-[45%] sm:max-w-none px-2">
-        <div class="flex items-center bg-white/98 dark:bg-gray-800/50 backdrop-blur-sm rounded-full p-1.5 w-full sm:w-auto border border-purple-100 dark:border-purple-900/50 shadow-lg shadow-purple-100/20 dark:shadow-purple-900/20" style="width: 100%; max-width: 440px;">
+    <nav class="flex-1 flex justify-center px-2">
+        <div class="flex items-center bg-white/98 dark:bg-gray-800/50 backdrop-blur-sm rounded-full p-1.5 border border-purple-100 dark:border-purple-900/50 shadow-lg shadow-purple-100/20 dark:shadow-purple-900/20" style="width: fit-content;">
             <a class="flex-1 px-2.5 sm:px-4 py-1.5 rounded-full transition-all duration-200 relative flex items-center justify-center gap-1.5 sm:gap-2 home-nav-link" href="?page=home" style="color: <?= $text_primary ?>">
                 <div class="absolute inset-0 rounded-full" style="opacity:1; background: <?= htmlspecialchars($navbar_selected_bg_dark) ?>"></div>
                 <span class="relative z-10">
@@ -285,21 +285,19 @@ function renderPosterColumns($posters, $startIndex, $count) {
           </div>
         </div>
         <div class="fixed flex items-center justify-center w-full gap-2 bottom-4">
-          <button class="relative light-sweep px-6 py-2 font-medium backdrop-blur-xl transition-[box-shadow] duration-300 ease-in-out hover:shadow dark:bg-[radial-gradient(circle_at_50%_0%,hsl(var(--primary)/10%)_0%,transparent_60%)] dark:hover:shadow-[0_0_20px_hsl(var(--primary)/10%)] rounded-full bg-blue-600/50" tabindex="0" style="--x:-100%;will-change:auto;transform:none">
+          <a href="<?= htmlspecialchars($config['social']['telegram_url']) ?>" target="_blank" rel="noreferrer" class="relative light-sweep px-6 py-2 font-medium backdrop-blur-xl transition-[box-shadow] duration-300 ease-in-out hover:shadow dark:bg-[radial-gradient(circle_at_50%_0%,hsl(var(--primary)/10%)_0%,transparent_60%)] dark:hover:shadow-[0_0_20px_hsl(var(--primary)/10%)] rounded-full bg-blue-600/50 cursor-pointer" tabindex="0" style="--x:-100%;will-change:auto;transform:none">
             <span class="relative  items-center h-full w-full text-sm uppercase flex gap-2 tracking-wide text-[rgb(0,0,0,65%)] dark:font-light dark:text-[rgb(255,255,255,90%)]" style="mask-image:linear-gradient(-75deg,hsl(var(--primary)) calc(var(--x) + 20%),transparent calc(var(--x) + 30%),hsl(var(--primary)) calc(var(--x) + 100%))">
-              <a href="<?= htmlspecialchars($config['social']['telegram_url']) ?>" target="_blank" rel="noreferrer">
-                <img src="complete/resources/image_12.webp" width="25" height="25" alt="telegram icon">
-              </a>
+              <img src="complete/resources/image_12.webp" width="25" height="25" alt="telegram icon">
             </span>
-            <span style="mask:linear-gradient(rgb(0,0,0),rgb(0,0,0)) content-box,linear-gradient(rgb(0,0,0),rgb(0,0,0));mask-composite:exclude" class="absolute inset-0 z-10 block rounded-[inherit] bg-[linear-gradient(-75deg,hsl(var(--primary)/10%)_calc(var(--x)+20%),hsl(var(--primary)/50%)_calc(var(--x)+25%),hsl(var(--primary)/10%)_calc(var(--x)+100%))] p-px"></span>
-          </button>
-          <button class="relative light-sweep px-6 py-2 font-medium backdrop-blur-xl transition-[box-shadow] duration-300 ease-in-out hover:shadow dark:bg-[radial-gradient(circle_at_50%_0%,hsl(var(--primary)/10%)_0%,transparent_60%)] dark:hover:shadow-[0_0_20px_hsl(var(--primary)/10%)] rounded-full bg-indigo-600/20" tabindex="0" style="--x:-100%;will-change:auto;transform:none">
-            <span class="relative items-center h-full w-full text-sm uppercase flex gap-2 tracking-wide text-[rgb(0,0,0,65%)] dark:font-light dark:text-[rgb(255,255,255,90%)]" style="mask-image:linear-gradient(-75deg,hsl(var(--primary)) calc(var(--x) + 20%),transparent calc(var(--x) + 30%),hsl(var(--primary)) calc(var(--x) + 100%))"><?= htmlspecialchars($config['social']['telegram_button_text']) ?> <a href="<?= htmlspecialchars($config['social']['telegram_url']) ?>" target="_blank" rel="noreferrer">
-                <img src="complete/resources/image_11.png" width="25" height="25" alt="telegram icon">
-              </a>
+            <span style="mask:linear-gradient(rgb(0,0,0),rgb(0,0,0)) content-box,linear-gradient(rgb(0,0,0),rgb(0,0,0));mask-composite:exclude" class="absolute inset-0 z-10 block rounded-[inherit] bg-[linear-gradient(-75deg,hsl(var(--primary)/10%)_calc(var(--x)+20%),hsl(var(--primary)/50%)_calc(var(--x)+25%),hsl(var(--primary)/10%)_calc(var(--x)+100%))] p-px pointer-events-none"></span>
+          </a>
+          <a href="<?= htmlspecialchars($config['social']['telegram_url']) ?>" target="_blank" rel="noreferrer" class="relative light-sweep px-6 py-2 font-medium backdrop-blur-xl transition-[box-shadow] duration-300 ease-in-out hover:shadow dark:bg-[radial-gradient(circle_at_50%_0%,hsl(var(--primary)/10%)_0%,transparent_60%)] dark:hover:shadow-[0_0_20px_hsl(var(--primary)/10%)] rounded-full bg-indigo-600/20 cursor-pointer" tabindex="0" style="--x:-100%;will-change:auto;transform:none">
+            <span class="relative items-center h-full w-full text-sm uppercase flex gap-2 tracking-wide text-[rgb(0,0,0,65%)] dark:font-light dark:text-[rgb(255,255,255,90%)]" style="mask-image:linear-gradient(-75deg,hsl(var(--primary)) calc(var(--x) + 20%),transparent calc(var(--x) + 30%),hsl(var(--primary)) calc(var(--x) + 100%))">
+              <?= htmlspecialchars($config['social']['telegram_button_text']) ?> 
+              <img src="complete/resources/image_11.png" width="25" height="25" alt="telegram icon">
             </span>
-            <span style="mask:linear-gradient(rgb(0,0,0),rgb(0,0,0)) content-box,linear-gradient(rgb(0,0,0),rgb(0,0,0));mask-composite:exclude" class="absolute inset-0 z-10 block rounded-[inherit] bg-[linear-gradient(-75deg,hsl(var(--primary)/10%)_calc(var(--x)+20%),hsl(var(--primary)/50%)_calc(var(--x)+25%),hsl(var(--primary)/10%)_calc(var(--x)+100%))] p-px"></span>
-          </button>
+            <span style="mask:linear-gradient(rgb(0,0,0),rgb(0,0,0)) content-box,linear-gradient(rgb(0,0,0),rgb(0,0,0));mask-composite:exclude" class="absolute inset-0 z-10 block rounded-[inherit] bg-[linear-gradient(-75deg,hsl(var(--primary)/10%)_calc(var(--x)+20%),hsl(var(--primary)/50%)_calc(var(--x)+25%),hsl(var(--primary)/10%)_calc(var(--x)+100%))] p-px pointer-events-none"></span>
+          </a>
         </div>
         <div class="w-full p-4 pb-20 text-center">
           <hr class="shrink-0 bg-divider border-none w-full h-divider my-4" role="separator">

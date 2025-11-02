@@ -24,8 +24,8 @@ $logo_text = $config['site']['logo_text'] ?? 'MEGAEMBED';
                 </div>
             </a>
         </div>
-        <nav class="flex-1 flex justify-center max-w-[45%] sm:max-w-none px-2">
-            <div class="flex items-center bg-white/98 dark:bg-gray-800/50 backdrop-blur-sm rounded-full p-1.5 w-full sm:w-auto border border-purple-100 dark:border-purple-900/50 shadow-lg shadow-purple-100/20 dark:shadow-purple-900/20" style="width: 100%; max-width: 440px;">
+        <nav class="flex-1 flex justify-center px-2">
+            <div class="flex items-center bg-white/98 dark:bg-gray-800/50 backdrop-blur-sm rounded-full p-1.5 border border-purple-100 dark:border-purple-900/50 shadow-lg shadow-purple-100/20 dark:shadow-purple-900/20" style="width: fit-content;">
                 <a class="flex-1 px-2.5 sm:px-4 py-1.5 rounded-full transition-all duration-200 relative flex items-center justify-center gap-1.5 sm:gap-2 <?php echo ($page === 'home') ? '' : 'hover-nav-link'; ?>" href="?page=home" style="<?php echo ($page === 'home') ? 'color: ' . $text_primary : 'color: rgba(100, 116, 139, 1)'; ?>">
                     <?php if ($page === 'home'): ?>
                     <div class="absolute inset-0 rounded-full" style="opacity:1; background: <?= htmlspecialchars($navbar_selected_bg_dark) ?>"></div>

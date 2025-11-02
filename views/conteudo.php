@@ -98,12 +98,12 @@ $items_per_page = $config['catalog']['items_per_page'] ?? 64;
     }
     @media (min-width: 640px) {
         .catalog-grid-layout {
-            grid-template-columns: repeat(3, minmax(0, 1fr));
+            grid-template-columns: repeat(4, minmax(0, 1fr));
         }
     }
     @media (min-width: 768px) {
         .catalog-grid-layout {
-            grid-template-columns: repeat(4, minmax(0, 1fr));
+            grid-template-columns: repeat(6, minmax(0, 1fr));
         }
     }
     @media (min-width: 1024px) {
@@ -138,44 +138,47 @@ $items_per_page = $config['catalog']['items_per_page'] ?? 64;
         left: 0;
         right: 0;
         bottom: 0;
-        background: linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.8) 100%);
+        background: linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.9) 100%);
         display: flex;
         flex-direction: column;
         justify-content: flex-end;
-        padding: 16px;
+        padding: 12px;
         opacity: 0;
         transition: opacity 0.3s ease;
+        pointer-events: none;
     }
     .poster-card:hover .poster-card-overlay {
         opacity: 1;
+        pointer-events: auto;
     }
     .poster-card-title {
-        font-size: 0.875rem;
+        font-size: 0.75rem;
         font-weight: 600;
         color: white;
-        margin-bottom: 12px;
-        line-height: 1.3;
+        margin-bottom: 8px;
+        line-height: 1.2;
+        display: none;
     }
     .poster-card-actions {
         display: flex;
         flex-direction: column;
-        gap: 6px;
+        gap: 4px;
     }
     .poster-card-action-btn {
         width: 100%;
-        background-color: rgba(75, 85, 99, 0.9);
+        background-color: rgba(75, 85, 99, 0.95);
         color: white;
         font-weight: 500;
-        padding: 8px;
-        border-radius: 6px;
+        padding: 6px 8px;
+        border-radius: 4px;
         text-align: center;
         transition: background-color 0.2s;
-        font-size: 0.75rem;
+        font-size: 0.7rem;
         border: none;
         cursor: pointer;
     }
     .poster-card-action-btn:hover {
-        background-color: rgba(107, 114, 128, 0.9);
+        background-color: rgba(107, 114, 128, 1);
     }
 
     /* Page number button styles */
