@@ -1190,7 +1190,8 @@ $config = Config::load();
                 <?php endif; ?>
                 
                 <div style="margin-top: 2rem; padding: 1rem; background: #e3f2fd; border-radius: 5px; border-left: 4px solid #2196f3;">
-                    <p style="margin: 0; color: #1976d2;"><strong>💡 Example:</strong> To create a "TV Channels" tab pulling from config.json, use data source type "Config.json Data" and enter "tv_channels" as the data source.</p>
+                    <p style="margin: 0 0 0.5rem 0; color: #1976d2;"><strong>💡 Example:</strong> To create a "TV Channels" tab pulling from config.json, use data source type "Config.json Data" and enter "tv_channels" as the data source.</p>
+                    <p style="margin: 0; color: #1976d2; font-size: 0.875rem;"><strong>Note:</strong> Allowed config keys: tv_channels, modules</p>
                 </div>
             </div>
         </div>

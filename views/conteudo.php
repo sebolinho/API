@@ -112,7 +112,7 @@ $content_tabs = $config['content_tabs'] ?? [
     }
     @media (min-width: 768px) {
         .catalog-grid-layout {
-            grid-template-columns: repeat(5, minmax(0, 1fr));
+            grid-template-columns: repeat(<?= min(5, $grid_columns) ?>, minmax(0, 1fr));
         }
     }
     @media (min-width: 1024px) {
@@ -228,11 +228,17 @@ document.addEventListener('DOMContentLoaded', function() {
     // Tab configuration
     const contentTabs = <?= json_encode($content_tabs) ?>;
     
+    // Validate tabs exist
+    if (!contentTabs || contentTabs.length === 0) {
+        showError('Nenhuma aba de conteúdo configurada. Por favor, configure as abas no painel de administração.');
+        return;
+    }
+    
     // State
     let allItemIds = [];
     let allItems = [];
-    let currentTabId = contentTabs[0]?.id || 'movies';
-    let currentTab = contentTabs[0] || {};
+    let currentTabId = contentTabs[0].id;
+    let currentTab = contentTabs[0];
     let currentCategory = currentTab.category || 'movie';
     let currentPage = 1;
     let totalPages = 1;
@@ -318,7 +324,15 @@ document.addEventListener('DOMContentLoaded', function() {
                     throw new Error(`Erro ao carregar config: ${response.statusText}`);
                 }
                 const config = await response.json();
+                
+                // Whitelist of allowed config keys for security
+                const allowedConfigKeys = ['tv_channels', 'modules'];
                 const configKey = dataSource; // e.g., "tv_channels"
+                
+                if (!allowedConfigKeys.includes(configKey)) {
+                    throw new Error(`Data source '${configKey}' não permitido`);
+                }
+                
                 const data = config[configKey] || [];
                 
                 if (Array.isArray(data) && data.length > 0) {
