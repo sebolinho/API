@@ -94,11 +94,22 @@ if (isset($_POST['save']) && isset($_SESSION['admin_logged_in'])) {
     ];
     
     // Update navigation
-    $config['navigation'] = [
-        'welcome_text' => $_POST['welcome_text'] ?? '',
-        'player_text' => $_POST['player_text'] ?? '',
-        'docs_text' => $_POST['docs_text'] ?? ''
-    ];
+    $config['navigation']['welcome_text'] = $_POST['welcome_text'] ?? '';
+    $config['navigation']['player_text'] = $_POST['player_text'] ?? '';
+    $config['navigation']['docs_text'] = $_POST['docs_text'] ?? '';
+    
+    // Update navigation link orders if provided
+    if (isset($_POST['nav_link_orders']) && is_array($_POST['nav_link_orders'])) {
+        if (isset($config['navigation']['links'])) {
+            foreach ($config['navigation']['links'] as &$link) {
+                $link_id = $link['id'];
+                if (isset($_POST['nav_link_orders'][$link_id])) {
+                    $link['order'] = intval($_POST['nav_link_orders'][$link_id]);
+                }
+            }
+            unset($link);
+        }
+    }
     
     // Update social links
     $config['social'] = [
@@ -786,7 +797,7 @@ $config = Config::load();
             <!-- Navigation Tab -->
             <div id="navigation" class="tab-content">
                 <div class="form-section">
-                    <h3>Navigation Menu</h3>
+                    <h3>Navigation Menu Text</h3>
                     <div class="form-group">
                         <label>Welcome Text</label>
                         <input type="text" name="welcome_text" value="<?= htmlspecialchars($config['navigation']['welcome_text'] ?? '') ?>">
@@ -798,6 +809,53 @@ $config = Config::load();
                     <div class="form-group">
                         <label>Docs Text</label>
                         <input type="text" name="docs_text" value="<?= htmlspecialchars($config['navigation']['docs_text'] ?? '') ?>">
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <h3>Navigation Link Order</h3>
+                    <p style="color: #666; margin-bottom: 1rem;">Reorder the navigation links by changing the order numbers. Lower numbers appear first.</p>
+                    
+                    <?php 
+                    $nav_links = $config['navigation']['links'] ?? [];
+                    // Sort by order
+                    usort($nav_links, function($a, $b) {
+                        return ($a['order'] ?? 999) - ($b['order'] ?? 999);
+                    });
+                    ?>
+                    
+                    <div style="display: grid; gap: 1rem;">
+                        <?php foreach ($nav_links as $link): ?>
+                        <div style="background: #f9f9f9; padding: 1rem; border-radius: 5px; display: flex; align-items: center; justify-content: space-between;">
+                            <div style="display: flex; align-items: center; gap: 1rem; flex: 1;">
+                                <span style="font-size: 1.5rem;">
+                                    <?php
+                                    $icons = [
+                                        'home' => '🏠',
+                                        'play' => '▶️',
+                                        'book' => '📚',
+                                        'content' => '📦'
+                                    ];
+                                    echo $icons[$link['icon']] ?? '📄';
+                                    ?>
+                                </span>
+                                <div style="flex: 1;">
+                                    <strong style="color: #333;"><?= htmlspecialchars($link['text']) ?></strong>
+                                    <p style="margin: 0.25rem 0 0; color: #888; font-size: 0.875rem;">Page: <?= htmlspecialchars($link['page']) ?></p>
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 1rem;">
+                                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <label style="margin: 0; font-weight: 500; color: #555;">Order:</label>
+                                    <input type="number" name="nav_link_orders[<?= htmlspecialchars($link['id']) ?>]" value="<?= htmlspecialchars($link['order'] ?? 1) ?>" min="1" max="10" style="width: 70px; padding: 0.5rem; border: 2px solid #e1e8ed; border-radius: 5px; font-size: 1rem;">
+                                </div>
+                            </div>
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
+                    
+                    <div style="margin-top: 1rem; padding: 1rem; background: #fff3cd; border-radius: 5px; border-left: 4px solid #ffc107;">
+                        <p style="margin: 0; color: #856404;"><strong>💡 Tip:</strong> Links are displayed from lowest to highest order number. For example, order 1 appears first, order 2 second, etc.</p>
                     </div>
                 </div>
             </div>

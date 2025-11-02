@@ -16,7 +16,41 @@
     "welcome_text": "Welcome",
     "player_text": "Player",
     "docs_text": "Docs",
-    "content_text": "Conteúdo"
+    "content_text": "Conteúdo",
+    "links": [
+      {
+        "id": "home",
+        "text": "Welcome",
+        "page": "home",
+        "icon": "home",
+        "order": 1,
+        "enabled": true
+      },
+      {
+        "id": "player",
+        "text": "Player",
+        "page": "player",
+        "icon": "play",
+        "order": 2,
+        "enabled": true
+      },
+      {
+        "id": "docs",
+        "text": "Docs",
+        "page": "docs",
+        "icon": "book",
+        "order": 3,
+        "enabled": true
+      },
+      {
+        "id": "conteudo",
+        "text": "Conteúdo",
+        "page": "conteudo",
+        "icon": "content",
+        "order": 4,
+        "enabled": true
+      }
+    ]
   },
   "social": {
     "telegram_url": "https://t.me/+vidlinkpro",
