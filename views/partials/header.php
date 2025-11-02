@@ -12,6 +12,15 @@ $nav_player = $config['navigation']['player_text'] ?? 'Player';
 $nav_docs = $config['navigation']['docs_text'] ?? 'Docs';
 $nav_content = $config['navigation']['content_text'] ?? 'Conteúdo';
 $logo_text = $config['site']['logo_text'] ?? 'MEGAEMBED';
+$nav_order = $config['navigation_order'] ?? ['home', 'player', 'docs', 'conteudo'];
+
+// Map page IDs to display data
+$nav_items = [
+    'home' => ['text' => $nav_welcome, 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>'],
+    'player' => ['text' => $nav_player, 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>'],
+    'docs' => ['text' => $nav_docs, 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>'],
+    'conteudo' => ['text' => $nav_content, 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>']
+];
 ?>
 <div class="w-full max-w-[70rem] mx-auto transition-all duration-200 p-4 bg-transparent border border-transparent rounded-xl justify-between items-center" style="position: fixed; top: 0; left: 50%; transform: translateX(-50%); z-index: 10;">
     <div class="flex items-center justify-between h-14 sm:h-16 gap-2 px-2">
@@ -24,53 +33,25 @@ $logo_text = $config['site']['logo_text'] ?? 'MEGAEMBED';
                 </div>
             </a>
         </div>
-        <nav class="flex-1 flex justify-center max-w-[45%] sm:max-w-none px-2">
-            <div class="flex items-center bg-white/98 dark:bg-gray-800/50 backdrop-blur-sm rounded-full p-1.5 w-full sm:w-auto border border-purple-100 dark:border-purple-900/50 shadow-lg shadow-purple-100/20 dark:shadow-purple-900/20" style="width: 100%; max-width: 440px;">
-                <a class="flex-1 px-2.5 sm:px-4 py-1.5 rounded-full transition-all duration-200 relative flex items-center justify-center gap-1.5 sm:gap-2 <?php echo ($page === 'home') ? '' : 'hover-nav-link'; ?>" href="?page=home" style="<?php echo ($page === 'home') ? 'color: ' . $text_primary : 'color: rgba(100, 116, 139, 1)'; ?>">
-                    <?php if ($page === 'home'): ?>
+        <nav class="flex-1 flex justify-center px-2">
+            <div class="flex items-center bg-white/98 dark:bg-gray-800/50 backdrop-blur-sm rounded-full p-1.5 border border-purple-100 dark:border-purple-900/50 shadow-lg shadow-purple-100/20 dark:shadow-purple-900/20" style="width: fit-content;">
+                <?php foreach ($nav_order as $nav_page): 
+                    if (!isset($nav_items[$nav_page])) continue;
+                    $item = $nav_items[$nav_page];
+                    $is_active = ($page === $nav_page);
+                ?>
+                <a class="flex-1 px-2.5 sm:px-4 py-1.5 rounded-full transition-all duration-200 relative flex items-center justify-center gap-1.5 sm:gap-2 <?php echo $is_active ? '' : 'hover-nav-link'; ?>" href="?page=<?= $nav_page ?>" style="<?php echo $is_active ? 'color: ' . $text_primary : 'color: rgba(100, 116, 139, 1)'; ?>; flex-shrink: 0;">
+                    <?php if ($is_active): ?>
                     <div class="absolute inset-0 rounded-full" style="opacity:1; background: <?= htmlspecialchars($navbar_selected_bg_dark) ?>"></div>
                     <?php endif; ?>
                     <span class="relative z-10">
                         <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true" class="w-5 h-5" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                            <?= $item['icon'] ?>
                         </svg>
                     </span>
-                    <span class="relative z-10 tracking-wide hidden lg:block text-sm font-medium"><?= htmlspecialchars($nav_welcome) ?></span>
+                    <span class="relative z-10 tracking-wide hidden lg:block text-sm font-medium"><?= htmlspecialchars($item['text']) ?></span>
                 </a>
-                <a class="flex-1 px-2.5 sm:px-4 py-1.5 rounded-full transition-all duration-200 relative flex items-center justify-center gap-1.5 sm:gap-2 <?php echo ($page === 'player') ? '' : 'hover-nav-link'; ?>" href="?page=player" style="<?php echo ($page === 'player') ? 'color: ' . $text_primary : 'color: rgba(100, 116, 139, 1)'; ?>">
-                    <?php if ($page === 'player'): ?>
-                    <div class="absolute inset-0 rounded-full" style="opacity:1; background: <?= htmlspecialchars($navbar_selected_bg_dark) ?>"></div>
-                    <?php endif; ?>
-                    <span class="relative z-10">
-                        <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true" class="w-5 h-5" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path>
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                    </span>
-                    <span class="relative z-10 tracking-wide hidden lg:block text-sm font-medium"><?= htmlspecialchars($nav_player) ?></span>
-                </a>
-                <a class="flex-1 px-2.5 sm:px-4 py-1.5 rounded-full transition-all duration-200 relative flex items-center justify-center gap-1.5 sm:gap-2 <?php echo ($page === 'docs') ? '' : 'hover-nav-link'; ?>" href="?page=docs" style="<?php echo ($page === 'docs') ? 'color: ' . $text_primary : 'color: rgba(100, 116, 139, 1)'; ?>">
-                    <?php if ($page === 'docs'): ?>
-                    <div class="absolute inset-0 rounded-full" style="opacity:1; background: <?= htmlspecialchars($navbar_selected_bg_dark) ?>"></div>
-                    <?php endif; ?>
-                    <span class="relative z-10">
-                        <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true" class="w-5 h-5" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
-                        </svg>
-                    </span>
-                    <span class="relative z-10 tracking-wide hidden lg:block text-sm font-medium"><?= htmlspecialchars($nav_docs) ?></span>
-                </a>
-                <a class="flex-1 px-2.5 sm:px-4 py-1.5 rounded-full transition-all duration-200 relative flex items-center justify-center gap-1.5 sm:gap-2 <?php echo ($page === 'conteudo') ? '' : 'hover-nav-link'; ?>" href="?page=conteudo" style="<?php echo ($page === 'conteudo') ? 'color: ' . $text_primary : 'color: rgba(100, 116, 139, 1)'; ?>">
-                    <?php if ($page === 'conteudo'): ?>
-                    <div class="absolute inset-0 rounded-full" style="opacity:1; background: <?= htmlspecialchars($navbar_selected_bg_dark) ?>"></div>
-                    <?php endif; ?>
-                    <span class="relative z-10">
-                        <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true" class="w-5 h-5" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-                        </svg>
-                    </span>
-                    <span class="relative z-10 tracking-wide hidden lg:block text-sm font-medium"><?= htmlspecialchars($nav_content) ?></span>
-                </a>
+                <?php endforeach; ?>
             </div>
         </nav>
 <style>
