@@ -42,7 +42,7 @@ $items_per_page = $config['catalog']['items_per_page'] ?? 64;
                 </div>
 
                 <!-- Catalog Grid -->
-                <div id="catalog-grid" class="hidden grid gap-3 md:gap-4" style="grid-template-columns: repeat(<?= $grid_columns ?>, minmax(0, 1fr));">
+                <div id="catalog-grid" class="hidden grid gap-3 md:gap-4 catalog-grid-layout">
                     <!-- Posters will be inserted here by JavaScript -->
                 </div>
             </div>
@@ -90,6 +90,26 @@ $items_per_page = $config['catalog']['items_per_page'] ?? 64;
 
     .new {
         align-items: center; padding: 5px; background-color: #1c1c1c; border-radius: 100px;
+    }
+
+    /* Catalog grid responsive layout */
+    .catalog-grid-layout {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    @media (min-width: 640px) {
+        .catalog-grid-layout {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+    }
+    @media (min-width: 768px) {
+        .catalog-grid-layout {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+    }
+    @media (min-width: 1024px) {
+        .catalog-grid-layout {
+            grid-template-columns: repeat(<?= $grid_columns ?>, minmax(0, 1fr));
+        }
     }
 
     /* Poster card styles */
