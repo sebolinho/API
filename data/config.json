@@ -76,6 +76,14 @@
       "data_source": "api/proxy.php?category=serie&type=tmdb&format=json&order=desc",
       "category": "serie",
       "default_poster": ""
+    },
+    {
+      "id": "tv-channels",
+      "name": "Canais de TV",
+      "data_source_type": "config",
+      "data_source": "tv_channels",
+      "category": "tv",
+      "default_poster": "https://placehold.co/342x513/6366f1/FFFFFF?text=TV"
     }
   ],
   "navigation_order": ["home", "player", "docs", "conteudo"],

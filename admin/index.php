@@ -97,8 +97,14 @@ if (isset($_POST['save']) && isset($_SESSION['admin_logged_in'])) {
     $config['navigation'] = [
         'welcome_text' => $_POST['welcome_text'] ?? '',
         'player_text' => $_POST['player_text'] ?? '',
-        'docs_text' => $_POST['docs_text'] ?? ''
+        'docs_text' => $_POST['docs_text'] ?? '',
+        'content_text' => $_POST['content_text'] ?? 'Conteúdo'
     ];
+    
+    // Update navigation order
+    if (isset($_POST['navigation_order']) && is_array($_POST['navigation_order'])) {
+        $config['navigation_order'] = $_POST['navigation_order'];
+    }
     
     // Update social links
     $config['social'] = [
@@ -767,7 +773,7 @@ $config = Config::load();
             <!-- Navigation Tab -->
             <div id="navigation" class="tab-content">
                 <div class="form-section">
-                    <h3>Navigation Menu</h3>
+                    <h3>Navigation Menu Text</h3>
                     <div class="form-group">
                         <label>Welcome Text</label>
                         <input type="text" name="welcome_text" value="<?= htmlspecialchars($config['navigation']['welcome_text'] ?? '') ?>">
@@ -780,6 +786,34 @@ $config = Config::load();
                         <label>Docs Text</label>
                         <input type="text" name="docs_text" value="<?= htmlspecialchars($config['navigation']['docs_text'] ?? '') ?>">
                     </div>
+                    <div class="form-group">
+                        <label>Content Text</label>
+                        <input type="text" name="content_text" value="<?= htmlspecialchars($config['navigation']['content_text'] ?? 'Conteúdo') ?>">
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <h3>Navigation Order</h3>
+                    <p style="color: #666; margin-bottom: 1rem;">Drag and drop to reorder navigation links. Changes are saved with the form.</p>
+                    <div id="nav-order-list" style="display: grid; gap: 0.5rem;">
+                        <?php 
+                        $nav_order = $config['navigation_order'] ?? ['home', 'player', 'docs', 'conteudo'];
+                        $nav_labels = [
+                            'home' => '🏠 Welcome',
+                            'player' => '▶️ Player',
+                            'docs' => '📖 Docs',
+                            'conteudo' => '🗂️ Conteúdo'
+                        ];
+                        foreach ($nav_order as $index => $item): ?>
+                        <div class="nav-order-item" draggable="true" data-page="<?= htmlspecialchars($item) ?>" style="background: #f9f9f9; padding: 1rem; border-radius: 5px; cursor: move; display: flex; align-items: center; gap: 1rem; border: 2px solid transparent;">
+                            <span style="color: #888; font-weight: bold;">☰</span>
+                            <input type="hidden" name="navigation_order[]" value="<?= htmlspecialchars($item) ?>">
+                            <span style="flex: 1; font-weight: 500;"><?= $nav_labels[$item] ?? ucfirst($item) ?></span>
+                            <span style="color: #888; font-size: 0.875rem;">Order: <span class="order-number"><?= $index + 1 ?></span></span>
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
+                    <small style="color: #888; display: block; margin-top: 1rem;">💡 Tip: The order here determines how links appear in the navigation bar.</small>
                 </div>
             </div>
             
@@ -1625,6 +1659,56 @@ $config = Config::load();
             
             // Initial preview update
             updatePreview();
+            
+            // Drag and drop for navigation order
+            const navOrderList = document.getElementById('nav-order-list');
+            if (navOrderList) {
+                let draggedElement = null;
+                
+                const items = navOrderList.querySelectorAll('.nav-order-item');
+                items.forEach(item => {
+                    item.addEventListener('dragstart', function(e) {
+                        draggedElement = this;
+                        this.style.opacity = '0.5';
+                        this.style.border = '2px dashed #667eea';
+                    });
+                    
+                    item.addEventListener('dragend', function(e) {
+                        this.style.opacity = '1';
+                        this.style.border = '2px solid transparent';
+                        updateOrderNumbers();
+                    });
+                    
+                    item.addEventListener('dragover', function(e) {
+                        e.preventDefault();
+                        if (this !== draggedElement) {
+                            const rect = this.getBoundingClientRect();
+                            const midpoint = rect.top + rect.height / 2;
+                            if (e.clientY < midpoint) {
+                                this.parentNode.insertBefore(draggedElement, this);
+                            } else {
+                                this.parentNode.insertBefore(draggedElement, this.nextSibling);
+                            }
+                        }
+                    });
+                });
+                
+                function updateOrderNumbers() {
+                    const items = navOrderList.querySelectorAll('.nav-order-item');
+                    items.forEach((item, index) => {
+                        const orderSpan = item.querySelector('.order-number');
+                        if (orderSpan) {
+                            orderSpan.textContent = index + 1;
+                        }
+                        // Update hidden input value to reflect new order
+                        const hiddenInput = item.querySelector('input[name="navigation_order[]"]');
+                        const pageValue = item.dataset.page;
+                        if (hiddenInput) {
+                            hiddenInput.value = pageValue;
+                        }
+                    });
+                }
+            }
         });
     </script>
 </body>
